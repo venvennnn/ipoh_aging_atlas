@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ipoh Ageing Atlas — Vulnerability index</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#1C5CAB}a:hover{color:#0D366B}
+input[type=range]{accent-color:#1C5CAB}
+</style>
+</helmet>
+<div style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #15181D; background: #FFFFFF; min-height: 100vh">
+
+<header style="border-bottom: 1px solid #DAD8D0; background: #FFFFFF">
+<nav aria-label="Main" style="max-width: 1376px; margin: 0 auto; padding: 0 32px; min-height: 64px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #15181D">
+<span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 19px">Ipoh Ageing Atlas</span>
+</a>
+<div style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px; font-weight: 500">
+<a href="Main.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Overview</a>
+<a href="PlaceFacility.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Place a facility</a>
+<a href="Optimizer.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Find best sites</a>
+<a href="IndexExplorer.dc.html" style="padding: 12px 14px; color: #15181D; text-decoration: none; border-bottom: 2px solid #1C5CAB">Vulnerability index</a>
+</div>
+</nav>
+</header>
+
+<main style="max-width: 1376px; margin: 0 auto; padding: 32px">
+<h1 style="margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 36px; letter-spacing: -0.01em">Who needs help most?</h1>
+<p style="margin: 8px 0 24px; font-size: 16px; color: #44443F; max-width: 820px">The ageing-vulnerability index scores every area 0–100 in five domains, where higher means worse for an older person. Decide how much each domain matters and the constituency ranking updates.</p>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+<aside aria-label="Domain weights" style="flex: 1 1 320px; max-width: 360px; min-width: 0; background: #FFFFFF; border: 1px solid #DAD8D0; border-radius: 14px; padding: 22px">
+<h2 style="margin: 0 0 4px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5A5A55">How much does each domain count?</h2>
+<p style="margin: 0 0 18px; font-size: 13px; color: #5A5A55">0 leaves a domain out. Equal weights match the study.</p>
+<div style="display: flex; flex-direction: column; gap: 18px">
+<sc-for list="{{ sliders }}" as="w" hint-placeholder-count="5">
+<div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+<label for="{{ w.id }}" style="font-size: 15px; font-weight: 600">{{ w.name }}</label>
+<span style="font-size: 14px; font-variant-numeric: tabular-nums; color: #44443F">{{ w.share }}</span>
+</div>
+<p style="margin: 2px 0 8px; font-size: 12px; color: #5A5A55">{{ w.desc }}</p>
+<input id="{{ w.id }}" type="range" min="0" max="5" step="1" value="{{ w.value }}" onChange="{{ w.onChange }}" style="width: 100%; height: 28px">
+</div>
+</sc-for>
+</div>
+<div style="height: 1px; background: #E6E4DD; margin: 22px 0 16px"></div>
+<p style="margin: 0 0 10px; font-size: 13px; font-weight: 600; color: #44443F">Presets</p>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{ presets }}" as="p" hint-placeholder-count="4">
+<button type="button" onClick="{{ p.pick }}" style="min-height: 40px; padding: 0 12px; border: 1px solid #C9C6BC; background: #FFFFFF; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 500; color: #15181D; cursor: pointer">{{ p.label }}</button>
+</sc-for>
+</div>
+</aside>
+
+<div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<section aria-label="Constituency ranking" style="background: #FFFFFF; border: 1px solid #DAD8D0; border-radius: 14px; padding: 22px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 16px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 600">Constituencies, most vulnerable first</h2>
+<span style="font-size: 13px; color: #5A5A55">Domain scores weighted by residents 65+</span>
+</div>
+<div style="overflow-x: auto">
+<div style="min-width: 640px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; gap: 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #5A5A55; padding-bottom: 6px; border-bottom: 1px solid #DAD8D0">
+<span style="flex: 0 0 28px">#</span><span style="flex: 0 0 150px">DUN</span><span style="flex: 1 1 auto">Index</span><span style="flex: 0 0 56px; text-align: right">Score</span><span style="flex: 0 0 70px; text-align: right">vs equal</span><span style="flex: 0 0 80px; text-align: right">Aged 65+</span>
+</div>
+<sc-for list="{{ ranking }}" as="r" hint-placeholder-count="13">
+<div style="display: flex; align-items: center; gap: 12px; font-size: 14px; min-height: 36px">
+<span style="flex: 0 0 28px; font-weight: 700; color: #44443F">{{ r.rank }}</span>
+<span style="flex: 0 0 150px; font-weight: 500">{{ r.name }}</span>
+<div style="flex: 1 1 auto; height: 20px; background: #F0EEE8; border-radius: 4px; overflow: hidden"><div style="{{ r.bar }}"></div></div>
+<span style="flex: 0 0 56px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{ r.score }}</span>
+<span style="{{ r.moveStyle }}">{{ r.move }}</span>
+<span style="flex: 0 0 80px; text-align: right; font-variant-numeric: tabular-nums; color: #44443F">{{ r.p65 }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px">
+<section aria-label="Domain scores by DUN" style="flex: 999 1 460px; min-width: 0; background: #FFFFFF; border: 1px solid #DAD8D0; border-radius: 14px; padding: 22px">
+<h2 style="margin: 0 0 4px; font-size: 18px; font-weight: 600">What drives each score</h2>
+<p style="margin: 0 0 14px; font-size: 13px; color: #5A5A55">Domain scores, 0–100, higher = worse. Darker = higher.</p>
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 460px; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums">
+<thead><tr style="color: #5A5A55; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em">
+<th scope="col" style="text-align: left; padding: 8px 6px; border-bottom: 1px solid #DAD8D0">DUN</th>
+<sc-for list="{{ domainNames }}" as="d" hint-placeholder-count="5"><th scope="col" style="padding: 8px 6px; border-bottom: 1px solid #DAD8D0; text-align: center">{{ d }}</th></sc-for>
+</tr></thead>
+<tbody>
+<sc-for list="{{ ranking }}" as="r" hint-placeholder-count="13">
+<tr>
+<th scope="row" style="text-align: left; font-weight: 500; padding: 4px 6px">{{ r.name }}</th>
+<sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><td style="{{ c.style }}">{{ c.v }}</td></sc-for>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+
+<section style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<div style="background: #FFFFFF; border: 1px solid #DAD8D0; border-radius: 14px; padding: 22px">
+<h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5A5A55">Robust under any weighting</h2>
+<p style="margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 44px">28</p>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: #44443F">hexagons stay in the worst 10% under at least 80% of 3,000 random weightings. 153 residents aged 65+ live in them.</p>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #DAD8D0; border-radius: 14px; padding: 22px">
+<h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5A5A55">Read this first</h2>
+<p style="margin: 0; font-size: 14px; line-height: 1.55; color: #44443F">Care and Social are measured only by distance to places. How people are actually doing (illness, loneliness, who cares for them) needs the survey.</p>
+</div>
+</section>
+</div>
+
+<section aria-label="Index bands" style="background: #FFFFFF; border: 1px solid #DAD8D0; border-radius: 14px; padding: 22px">
+<h2 style="margin: 0 0 4px; font-size: 18px; font-weight: 600">Best-off to worst-off fifth of Ipoh</h2>
+<p style="margin: 0 0 14px; font-size: 13px; color: #5A5A55">Hexagons in five bands with equal numbers of residents 65+, by overall index (equal weights).</p>
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 560px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums">
+<thead><tr style="color: #5A5A55; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em">
+<th scope="col" style="text-align: left; padding: 8px; border-bottom: 1px solid #DAD8D0">Band</th>
+<th scope="col" style="text-align: right; padding: 8px; border-bottom: 1px solid #DAD8D0">Aged 65+</th>
+<sc-for list="{{ domainNames }}" as="d" hint-placeholder-count="5"><th scope="col" style="padding: 8px; border-bottom: 1px solid #DAD8D0; text-align: center">{{ d }}</th></sc-for>
+</tr></thead>
+<tbody>
+<sc-for list="{{ bands }}" as="b" hint-placeholder-count="5">
+<tr>
+<th scope="row" style="text-align: left; font-weight: 500; padding: 4px 8px">{{ b.name }}</th>
+<td style="text-align: right; padding: 4px 8px">{{ b.p65 }}</td>
+<sc-for list="{{ b.cells }}" as="c" hint-placeholder-count="5"><td style="{{ c.style }}">{{ c.v }}</td></sc-for>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { w: [1, 1, 1, 1, 1] };
+  }
+  renderVals() {
+    var self = this, w = this.state.w;
+    var NAMES = ['Money', 'Health', 'Care', 'Social', 'Access'];
+    var DESC = ['Estimated household income (DOSM DUN median)', 'Walk/drive to clinic and hospital, clinic capacity', 'Walk/drive to a care home', 'Kinds of meeting place within 10 min walk', 'Bus stops and frequency, internet speed'];
+    var DUN = [
+      ['Menglembu', 4560, 95, 32, 53, 45, 35], ['Manjoi', 14779, 60, 54, 43, 40, 48], ['Tebing Tinggi', 5400, 85, 35, 46, 42, 34],
+      ['Bercham', 4697, 90, 44, 22, 41, 36], ['Hulu Kinta', 11581, 33, 37, 58, 49, 56], ['Jelapang', 2623, 79, 47, 22, 44, 38],
+      ['Sungai Rapat', 4957, 74, 37, 38, 33, 39], ['Buntong', 2985, 82, 23, 25, 35, 27], ['Pasir Pinji', 4711, 99, 16, 24, 23, 29],
+      ['Teja', 167, 71, 11, 20, 10, 49], ['Canning', 6298, 14, 32, 11, 33, 37], ['Kepayang', 4512, 2, 22, 16, 46, 30], ['Simpang Pulai', 6937, 8, 38, 12, 20, 34]
+    ];
+    var score = function (d, ws) {
+      var t = ws[0] + ws[1] + ws[2] + ws[3] + ws[4];
+      if (!t) return 0;
+      var s = 0; for (var i = 0; i < 5; i++) s += ws[i] * d[i + 2];
+      return s / t;
+    };
+    var rankOf = function (ws) {
+      return DUN.map(function (d) { return { d: d, s: score(d, ws) }; }).sort(function (a, b) { return b.s - a.s; });
+    };
+    var eq = rankOf([1, 1, 1, 1, 1]), eqRank = {};
+    eq.forEach(function (x, i) { eqRank[x.d[0]] = i + 1; });
+    var heat = function (v) {
+      var bg = v >= 80 ? '#6E2408' : v >= 60 ? '#B9461A' : v >= 40 ? '#F8B48C' : v >= 20 ? '#FDE0CC' : '#FFF4EC';
+      var fg = v >= 60 ? '#FFFFFF' : '#15181D';
+      return 'text-align: center; padding: 6px; background: ' + bg + '; color: ' + fg + '; border: 2px solid #FFFFFF';
+    };
+    var total = w.reduce(function (a, b) { return a + b; }, 0);
+    var ranking = rankOf(w).map(function (x, i) {
+      var mv = eqRank[x.d[0]] - (i + 1);
+      var col = x.s >= 45 ? '#B9461A' : '#1C5CAB';
+      return {
+        rank: String(i + 1), name: x.d[0], score: x.s.toFixed(0), p65: x.d[1].toLocaleString('en-US'),
+        bar: 'width: ' + x.s.toFixed(1) + '%; height: 100%; background: ' + col,
+        move: mv > 0 ? '▲ ' + mv : mv < 0 ? '▼ ' + (-mv) : '–',
+        moveStyle: 'flex: 0 0 70px; text-align: right; font-size: 13px; font-weight: 600; color: ' + (mv > 0 ? '#B9461A' : mv < 0 ? '#1C5CAB' : '#5A5A55'),
+        cells: x.d.slice(2).map(function (v) { return { v: String(v), style: heat(v) }; })
+      };
+    });
+    var sliders = NAMES.map(function (n, i) {
+      return {
+        id: 'w-' + n.toLowerCase(), name: n, desc: DESC[i], value: w[i],
+        share: total ? Math.round(w[i] / total * 100) + '% of index' : '—',
+        onChange: function (e) { var next = w.slice(); next[i] = Number(e.target.value); self.setState({ w: next }); }
+      };
+    });
+    var set = function (ws) { return function () { self.setState({ w: ws }); }; };
+    var BANDS = [['Q1 best-off', 14813, 17, 23, 11, 20, 28], ['Q2', 14827, 48, 26, 23, 24, 36], ['Q3', 14835, 61, 36, 33, 33, 38], ['Q4', 14852, 54, 47, 50, 56, 49], ['Q5 worst-off', 14880, 53, 69, 72, 67, 70]];
+    return {
+      sliders: sliders, ranking: ranking, domainNames: NAMES,
+      presets: [
+        { label: 'Equal (study)', pick: set([1, 1, 1, 1, 1]) },
+        { label: 'Health first', pick: set([1, 4, 2, 1, 1]) },
+        { label: 'Money first', pick: set([4, 1, 1, 1, 1]) },
+        { label: 'Getting around', pick: set([1, 2, 1, 1, 4]) }
+      ],
+      bands: BANDS.map(function (b) { return { name: b[0], p65: b[1].toLocaleString('en-US'), cells: b.slice(2).map(function (v) { return { v: String(v), style: heat(v) }; }) }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

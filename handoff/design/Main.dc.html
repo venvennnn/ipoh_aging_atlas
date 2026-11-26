@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ipoh Ageing Atlas — Analysis</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#1C5CAB}a:hover{color:#0D366B}
+@keyframes dcProg{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.dc-prog{transform-origin:left center;animation:dcProg 6.5s linear forwards}
+@keyframes dcPulse{0%,100%{box-shadow:0 0 0 0 rgba(248,180,140,.7)}50%{box-shadow:0 0 0 6px rgba(248,180,140,0)}}
+.dc-pulse{animation:dcPulse 2.4s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.dc-prog{animation:none;transform:scaleX(1)}.dc-pulse{animation:none}}
+</style>
+</helmet>
+<div style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #15181D; background: #FFFFFF; min-height: 100vh">
+
+<header style="border-bottom: 1px solid #E6E4DD; background: #FFFFFF">
+<nav aria-label="Main" style="max-width: 1280px; margin: 0 auto; padding: 0 32px; min-height: 64px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #15181D">
+<span style="font-weight: 800; font-size: 19px">Ipoh Ageing Atlas</span>
+</a>
+<div style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px; font-weight: 500">
+<a href="Main.dc.html" style="padding: 12px 14px; color: #15181D; text-decoration: none; border-bottom: 2px solid #1C5CAB">Overview</a>
+<a href="PlaceFacility.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Place a facility</a>
+<a href="Optimizer.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Find best sites</a>
+<a href="IndexExplorer.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Vulnerability index</a>
+</div>
+</nav>
+</header>
+
+<section aria-label="Introduction" aria-roledescription="carousel" onMouseEnter="{{ pause }}" onMouseLeave="{{ resume }}" style="position: relative; height: 760px; background: #0A1622; color: #FFFFFF; overflow: hidden">
+
+<div style="{{ cw.intro }}" aria-hidden="true">
+<img src="/_blob/310d672b025fbda8b29fb382927214ce" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% 40%">
+</div>
+
+<div style="{{ cw.people }}" aria-hidden="true">
+<svg viewBox="0 0 740 800" style="position: absolute; right: 3%; top: 24px; height: 700px; width: auto">
+<sc-for list="{{ cineHex65 }}" as="h" hint-placeholder-count="0"><path d="{{ h.d }}" fill="{{ h.fill }}"></path></sc-for>
+<path d="{{ boundary }}" fill="none" stroke="#DCE9F9" stroke-opacity="0.5" stroke-width="1.4"></path>
+</svg>
+</div>
+
+<div style="{{ cw.health }}" aria-hidden="true">
+<svg viewBox="0 0 740 800" style="position: absolute; right: 3%; top: 24px; height: 700px; width: auto">
+<image href="/_blob/1bbce11b9456cb832316d509746f580f" x="0" y="0" width="740" height="800" preserveAspectRatio="none"></image>
+<path d="{{ boundary }}" fill="none" stroke="#DCE9F9" stroke-opacity="0.6" stroke-width="1.4"></path>
+<sc-for list="{{ cineClinics }}" as="p" hint-placeholder-count="0"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="8" fill="#86B6EF" stroke="#0A1622" stroke-width="3"></circle></sc-for>
+</svg>
+</div>
+
+<div style="{{ cw.money }}" aria-hidden="true">
+<svg viewBox="0 0 740 800" style="position: absolute; right: 3%; top: 24px; height: 700px; width: auto">
+<sc-for list="{{ cineDun }}" as="d" hint-placeholder-count="0"><path d="{{ d.d }}" fill="{{ d.fill }}" stroke="#0A1622" stroke-width="2.5"></path></sc-for>
+<path d="{{ boundary }}" fill="none" stroke="#DCE9F9" stroke-opacity="0.6" stroke-width="1.4"></path>
+<sc-for list="{{ cineDun }}" as="d" hint-placeholder-count="0"><text x="{{ d.x }}" y="{{ d.y }}" text-anchor="middle" font-size="12" font-weight="700" fill="{{ d.ink }}">{{ d.inc }}</text></sc-for>
+</svg>
+</div>
+
+<div style="{{ cw.access }}" aria-hidden="true">
+<svg viewBox="0 0 740 800" style="position: absolute; right: 3%; top: 24px; height: 700px; width: auto">
+<image href="/_blob/90915baefe967f9568f439bd4a8271a2" x="0" y="0" width="740" height="800" preserveAspectRatio="none"></image>
+<path d="{{ boundary }}" fill="none" stroke="#DCE9F9" stroke-opacity="0.6" stroke-width="1.4"></path>
+<sc-for list="{{ cineBus }}" as="p" hint-placeholder-count="0"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="2.4" fill="#FFFFFF"></circle></sc-for>
+</svg>
+</div>
+
+<div style="{{ cw.index }}" aria-hidden="true">
+<svg viewBox="0 0 740 800" style="position: absolute; right: 3%; top: 24px; height: 700px; width: auto">
+<image href="/_blob/514a293e6419967f9e81f3ad2ab1d4c6" x="0" y="0" width="740" height="800" preserveAspectRatio="none"></image>
+<sc-for list="{{ cineDun }}" as="d" hint-placeholder-count="0"><path d="{{ d.d }}" fill="none" stroke="#DCE9F9" stroke-opacity="0.35" stroke-width="1"></path></sc-for>
+<path d="{{ boundary }}" fill="none" stroke="#DCE9F9" stroke-opacity="0.6" stroke-width="1.4"></path>
+</svg>
+</div>
+
+<div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(10,22,34,0.94) 0%, rgba(10,22,34,0.78) 38%, rgba(10,22,34,0) 64%), linear-gradient(0deg, rgba(10,22,34,0.85) 0%, rgba(10,22,34,0) 22%)"></div>
+
+<div style="position: absolute; top: 28px; left: 0; right: 0; z-index: 3">
+<div style="max-width: 1280px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #C9D6E3">
+<span style="letter-spacing: 0.02em">Ipoh ageing study · five lenses on one city</span>
+<span style="font-family: ui-monospace, Menlo, monospace; letter-spacing: 0.18em">{{ counter }}</span>
+</div>
+</div>
+
+<div style="position: absolute; inset: 0; z-index: 2">
+<div style="max-width: 1280px; height: 100%; margin: 0 auto; padding: 0 32px; position: relative">
+<sc-for list="{{ chapters }}" as="c" hint-placeholder-count="6">
+<article aria-hidden="{{ c.hidden }}" style="{{ c.style }}">
+<p style="margin: 0; display: flex; align-items: center; gap: 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.18em; color: #F8B48C"><span class="dc-pulse" style="width: 7px; height: 7px; border-radius: 50%; background: #F8B48C"></span>{{ c.kicker }}</p>
+<h2 style="margin: 26px 0 0; font-weight: 600; font-size: 68px; line-height: 1.02; letter-spacing: -0.035em; color: #FFFFFF">{{ c.h1 }}<br><span style="font-weight: 600; color: #F8B48C">{{ c.h2 }}</span></h2>
+<p style="margin: 24px 0 0; max-width: 440px; font-size: 16px; line-height: 1.7; color: #C9D6E3">{{ c.body }}</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px">
+<sc-for list="{{ c.facts }}" as="f" hint-placeholder-count="3"><span style="padding: 7px 12px; border: 1px solid rgba(220,233,249,0.28); border-radius: 999px; font-size: 12px; color: #DCE9F9">{{ f }}</span></sc-for>
+</div>
+<a href="{{ c.href }}" tabindex="{{ c.tab }}" style="display: inline-flex; align-items: center; gap: 28px; margin-top: 30px; min-height: 48px; padding: 0 20px; border: 1px solid rgba(220,233,249,0.5); border-radius: 999px; color: #FFFFFF; font-size: 14px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.04)">{{ c.cta }}<span aria-hidden="true" style="font-size: 18px">↘</span></a>
+</article>
+</sc-for>
+</div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; border-top: 1px solid rgba(220,233,249,0.14)">
+<div role="tablist" aria-label="Chapters" style="max-width: 1280px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+<button type="button" role="tab" aria-selected="{{ t.sel }}" onClick="{{ t.pick }}" style="{{ t.style }}">
+<span style="position: absolute; left: 0; right: 0; top: -1px; height: 2px; background: rgba(220,233,249,0.12)"></span>
+<sc-if value="{{ t.on }}" hint-placeholder-val="{{ false }}"><span class="dc-prog" style="{{ t.bar }}"></span></sc-if>
+<span style="font-family: ui-monospace, Menlo, monospace; font-size: 10px; opacity: 0.7; margin-right: 10px">{{ t.n }}</span>{{ t.label }}
+</button>
+</sc-for>
+</div>
+</div>
+</section>
+
+<main style="max-width: 1280px; margin: 0 auto; padding: 0 32px">
+
+<nav aria-label="On this page" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 20px 0; border-bottom: 1px solid #E6E4DD">
+<sc-for list="{{ toc }}" as="t" hint-placeholder-count="8">
+<a href="{{ t.href }}" style="display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid #DAD8D0; border-radius: 999px; font-size: 14px; font-weight: 600; color: #15181D; text-decoration: none">{{ t.label }}</a>
+</sc-for>
+</nav>
+
+<section id="findings" style="padding: 48px 0 16px">
+<h2 style="margin: 0 0 24px; font-weight: 800; font-size: 30px; letter-spacing: -0.01em">Key findings</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px">
+<sc-for list="{{ findings }}" as="f" hint-placeholder-count="6">
+<div style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 6px">
+<p style="margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">{{ f.domain }}</p>
+<p style="margin: 0; font-weight: 800; font-size: 40px; color: #15181D">{{ f.num }}</p>
+<p style="margin: 0; font-size: 15px; line-height: 1.5; color: #2C2C29">{{ f.text }}</p>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="people" style="padding: 64px 0 16px">
+<p style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #1C5CAB">Part 1 · People</p>
+<h2 style="margin: 6px 0 10px; font-weight: 800; font-size: 30px; letter-spacing: -0.01em">Where people aged 65+ live</h2>
+<p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #44443F; max-width: 820px">Census 2020 shares aged 65+, applied to 2026 totals (Kinta grew ×1.0475, OpenDOSM) and spread over hexagons with Meta's 30 m population layer.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+<div style="flex: 1 1 520px; min-width: 0; max-width: 640px; border: 1px solid #E6E4DD; border-radius: 14px; padding: 16px">
+<div role="group" aria-label="Map layer" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px">
+<sc-for list="{{ peopleTabs }}" as="t" hint-placeholder-count="3"><button type="button" onClick="{{ t.pick }}" aria-pressed="{{ t.pressed }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+</div>
+<div style="position: relative">
+<svg viewBox="0 0 740 800" role="img" aria-label="{{ peopleAria }}" style="width: 100%; height: auto; display: block">
+<sc-for list="{{ peopleHex }}" as="h" hint-placeholder-count="0"><path d="{{ h.d }}" fill="{{ h.fill }}" stroke="#FFFFFF" stroke-width="0.6" onMouseEnter="{{ h.hover }}"></path></sc-for>
+<path d="{{ boundary }}" fill="none" stroke="#15181D" stroke-width="1.6" pointer-events="none"></path>
+</svg>
+<div style="position: absolute; top: 8px; left: 8px; max-width: 240px; background: rgba(255,255,255,0.94); border: 1px solid #E6E4DD; border-radius: 8px; padding: 10px 12px; font-size: 12px; line-height: 1.5; pointer-events: none">
+<p style="margin: 0; font-weight: 700; font-size: 13px">{{ pHover.title }}</p>
+<p style="margin: 2px 0 0; color: #44443F; white-space: pre-line">{{ pHover.body }}</p>
+</div>
+<sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}"><div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #5A5A55">Loading map…</div></sc-if>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 12px; color: #44443F">
+<span>{{ peopleLegend.lo }}</span><span style="{{ peopleLegend.bar }}"></span><span>{{ peopleLegend.hi }}</span><span style="margin-left: 6px; color: #5A5A55">{{ peopleLegend.unit }}</span>
+</div>
+</div>
+<div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<div style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 22px">
+<h3 style="margin: 0 0 4px; font-size: 16px; font-weight: 700">Share aged 65+ by census area, 2020</h3>
+<p style="margin: 0 0 16px; font-size: 13px; color: #5A5A55">Line = Ipoh combined, 9.61%. DOSM, Kinta: Fakta dan Angka, p. 8.</p>
+<div style="position: relative; display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{ census }}" as="c" hint-placeholder-count="5">
+<div style="display: grid; grid-template-columns: 130px minmax(0, 1fr) 48px; align-items: center; gap: 10px; font-size: 13px">
+<span>{{ c.area }}</span>
+<div style="position: relative; height: 16px"><div style="{{ c.bar }}"></div><div style="position: absolute; top: -4px; bottom: -4px; left: 48.05%; border-left: 1.5px dashed #15181D"></div></div>
+<span style="text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{ c.pct }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="border: 1px dashed #B3B0A5; border-radius: 14px; padding: 22px; background: #FFFCF8">
+<p style="margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #B9461A">Limit</p>
+<p style="margin: 10px 0 0; font-size: 14px; line-height: 1.6; color: #2C2C29">Mukim Hulu Kinta holds about 91% of Ipoh's people under one figure (9.2%), so the share map only varies where a Bandar area applies. Bandar Ipoh's extent is estimated from the town centre (39 hexagons, 14.0% aged 65+), not an official boundary.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section id="health" style="padding: 64px 0 16px">
+<p style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #1C5CAB">Part 2 · Health</p>
+<h2 style="margin: 6px 0 10px; font-weight: 800; font-size: 30px; letter-spacing: -0.01em">How quickly older residents reach a clinic or hospital</h2>
+<p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #44443F; max-width: 820px">Travel time to the nearest of 19 public clinics and 15 hospitals. Walking follows real streets at 0.9 m/s; driving follows real roads with one-way streets and no traffic.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+<div style="flex: 1 1 520px; min-width: 0; max-width: 640px; border: 1px solid #E6E4DD; border-radius: 14px; padding: 16px">
+<div role="group" aria-label="Travel-time layer" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px">
+<sc-for list="{{ healthTabs }}" as="t" hint-placeholder-count="5"><button type="button" onClick="{{ t.pick }}" aria-pressed="{{ t.pressed }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+</div>
+<div style="position: relative">
+<svg viewBox="0 0 740 800" role="img" aria-label="{{ healthAria }}" style="width: 100%; height: auto; display: block">
+<sc-if value="{{ hl.walk_clinic }}" hint-placeholder-val="{{ true }}"><image href="/_blob/1bbce11b9456cb832316d509746f580f" x="0" y="0" width="740" height="800" preserveAspectRatio="none" opacity="0.92"></image></sc-if>
+<sc-if value="{{ hl.walk_hospital }}" hint-placeholder-val="{{ false }}"><image href="/_blob/31fbebea4c3b351878b2a2eb17894265" x="0" y="0" width="740" height="800" preserveAspectRatio="none" opacity="0.92"></image></sc-if>
+<sc-if value="{{ hl.drive_clinic }}" hint-placeholder-val="{{ false }}"><image href="/_blob/e97269336c597e325728abecf6f65cf1" x="0" y="0" width="740" height="800" preserveAspectRatio="none" opacity="0.92"></image></sc-if>
+<sc-if value="{{ hl.drive_hospital }}" hint-placeholder-val="{{ false }}"><image href="/_blob/ffa703b0e94be24d0b7f2a6d6838aff9" x="0" y="0" width="740" height="800" preserveAspectRatio="none" opacity="0.92"></image></sc-if>
+<sc-if value="{{ hl.capacity }}" hint-placeholder-val="{{ false }}"><image href="/_blob/919753a5b052df5827c95bcac0c8ac9c" x="0" y="0" width="740" height="800" preserveAspectRatio="none" opacity="0.92"></image></sc-if>
+<path d="{{ boundary }}" fill="none" stroke="#15181D" stroke-width="1.6" pointer-events="none"></path>
+<sc-for list="{{ healthPts }}" as="p" hint-placeholder-count="0"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="8" fill="{{ p.fill }}" stroke="#FFFFFF" stroke-width="2.5" onMouseEnter="{{ p.hover }}"></circle></sc-for>
+</svg>
+<div style="position: absolute; top: 8px; left: 8px; max-width: 260px; background: rgba(255,255,255,0.94); border: 1px solid #E6E4DD; border-radius: 8px; padding: 10px 12px; font-size: 12px; line-height: 1.5; pointer-events: none">
+<p style="margin: 0; font-weight: 700; font-size: 13px">{{ hHover.title }}</p>
+<p style="margin: 2px 0 0; color: #44443F">{{ hHover.body }}</p>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 12px; color: #44443F">
+<span>{{ healthLegend.lo }}</span><span style="{{ healthLegend.bar }}"></span><span>{{ healthLegend.hi }}</span><span style="margin-left: 6px; display: inline-flex; align-items: center; gap: 6px"><span style="{{ healthLegend.dot }}"></span>{{ healthLegend.pts }}</span>
+</div>
+</div>
+<div style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<div style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 22px">
+<h3 style="margin: 0 0 4px; font-size: 16px; font-weight: 700">Share of residents 65+ within each travel time</h3>
+<p style="margin: 0 0 10px; font-size: 13px; color: #5A5A55">Hover to read values. Dashed line = 30 minutes.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #44443F; margin-bottom: 8px">
+<sc-for list="{{ curveLegend }}" as="l" hint-placeholder-count="4"><span style="display: inline-flex; align-items: center; gap: 6px"><svg width="22" height="8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" stroke="{{ l.color }}" stroke-width="2.5" stroke-dasharray="{{ l.dash }}"></line></svg>{{ l.label }}</span></sc-for>
+</div>
+<div style="position: relative">
+<svg viewBox="0 0 460 280" role="img" aria-label="Cumulative share of residents aged 65+ reaching a clinic or hospital within each number of minutes, walking and driving" style="width: 100%; height: auto; display: block">
+<sc-for list="{{ yTicks }}" as="t" hint-placeholder-count="5">
+<line x1="40" x2="450" y1="{{ t.y }}" y2="{{ t.y }}" stroke="#EEECE6" stroke-width="1"></line>
+<text x="34" y="{{ t.ty }}" text-anchor="end" font-size="11" fill="#5A5A55">{{ t.label }}</text>
+</sc-for>
+<sc-for list="{{ xTicks }}" as="t" hint-placeholder-count="7"><text x="{{ t.x }}" y="270" text-anchor="middle" font-size="11" fill="#5A5A55">{{ t.label }}</text></sc-for>
+<line x1="{{ x30 }}" x2="{{ x30 }}" y1="10" y2="250" stroke="#15181D" stroke-width="1" stroke-dasharray="3 3"></line>
+<sc-for list="{{ curves }}" as="c" hint-placeholder-count="4"><path d="{{ c.d }}" fill="none" stroke="{{ c.color }}" stroke-width="2.2" stroke-dasharray="{{ c.dash }}" stroke-linejoin="round"></path></sc-for>
+<sc-if value="{{ cross.show }}" hint-placeholder-val="{{ false }}">
+<line x1="{{ cross.x }}" x2="{{ cross.x }}" y1="10" y2="250" stroke="#5A5A55" stroke-width="1"></line>
+<sc-for list="{{ cross.dots }}" as="d" hint-placeholder-count="4"><circle cx="{{ cross.x }}" cy="{{ d.y }}" r="4.5" fill="{{ d.color }}" stroke="#FFFFFF" stroke-width="2"></circle></sc-for>
+</sc-if>
+<rect x="40" y="10" width="410" height="240" fill="transparent" onMouseMove="{{ onCurveMove }}" onMouseLeave="{{ onCurveLeave }}"></rect>
+</svg>
+<sc-if value="{{ cross.show }}" hint-placeholder-val="{{ false }}">
+<div style="{{ cross.boxStyle }}">
+<p style="margin: 0 0 4px; font-weight: 700">Within {{ cross.min }} min</p>
+<sc-for list="{{ cross.rows }}" as="r" hint-placeholder-count="4"><p style="margin: 0; display: flex; justify-content: space-between; gap: 12px"><span>{{ r.label }}</span><strong>{{ r.v }}</strong></p></sc-for>
+</div>
+</sc-if>
+</div>
+<p style="margin: 8px 0 0; font-size: 12px; color: #5A5A55; text-align: center">Minutes</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 20px">
+<div style="flex: 1 1 200px; border: 1px solid #E6E4DD; border-radius: 14px; padding: 20px">
+<p style="margin: 0; font-weight: 800; font-size: 34px; color: #B9461A">54,039</p>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: #2C2C29">residents 65+ (73%) are more than a 30-minute walk from a public clinic.</p>
+</div>
+<div style="flex: 1 1 200px; border: 1px solid #E6E4DD; border-radius: 14px; padding: 20px">
+<p style="margin: 0; font-weight: 800; font-size: 34px">23.4</p>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: #2C2C29">public hospital beds per 10,000 people in Perak, 2024. Kinta's row didn't load; private beds not counted.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="money" style="padding: 64px 0 16px">
+<p style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #1C5CAB">Part 3 · Money</p>
+<h2 style="margin: 6px 0 10px; font-weight: 800; font-size: 30px; letter-spacing: -0.01em">Who is better off, who is worse off</h2>
+<p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #44443F; max-width: 820px">Official DOSM median household income for the 13 state constituencies (DUN) covering Ipoh. House-price files (NAPIC) weren't loaded, so there is no estimate inside each DUN.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+<div style="flex: 1 1 520px; min-width: 0; max-width: 640px; border: 1px solid #E6E4DD; border-radius: 14px; padding: 16px">
+<div style="position: relative">
+<svg viewBox="0 0 740 800" role="img" aria-label="Map of median household income by constituency in Ipoh" style="width: 100%; height: auto; display: block">
+<sc-for list="{{ dunShapes }}" as="d" hint-placeholder-count="0"><path d="{{ d.d }}" fill="{{ d.fill }}" stroke="#FFFFFF" stroke-width="2" onMouseEnter="{{ d.hover }}"></path></sc-for>
+<path d="{{ boundary }}" fill="none" stroke="#15181D" stroke-width="1.6" pointer-events="none"></path>
+<sc-for list="{{ dunShapes }}" as="d" hint-placeholder-count="0">
+<text x="{{ d.x }}" y="{{ d.y }}" text-anchor="middle" font-size="12" font-weight="700" fill="{{ d.ink }}" pointer-events="none">{{ d.name }}</text>
+<text x="{{ d.x }}" y="{{ d.y2 }}" text-anchor="middle" font-size="11" fill="{{ d.ink }}" pointer-events="none">{{ d.inc }}</text>
+</sc-for>
+</svg>
+<div style="position: absolute; top: 8px; left: 8px; max-width: 240px; background: rgba(255,255,255,0.94); border: 1px solid #E6E4DD; border-radius: 8px; padding: 10px 12px; font-size: 12px; line-height: 1.5; pointer-events: none">
+<p style="margin: 0; font-weight: 700; font-size: 13px">{{ mHover.title }}</p>
+<p style="margin: 2px 0 0; color: #44443F; white-space: pre-line">{{ mHover.body }}</p>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 12px; color: #44443F">
+<span>RM3,165</span><span style="width: 160px; height: 10px; border-radius: 2px; background: linear-gradient(90deg, #EEF4FC, #CDE2FB, #86B6EF, #1C5CAB, #0D366B)"></span><span>RM7,335</span><span style="margin-left: 6px; color: #5A5A55">median per month, 2024</span>
+</div>
+</div>
+<div style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<div style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 22px">
+<h3 style="margin: 0 0 4px; font-size: 16px; font-weight: 700">Income moved unevenly, 2019 → 2024</h3>
+<div style="display: flex; gap: 16px; font-size: 12px; color: #44443F; margin: 6px 0 12px">
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #A8A59B"></span>2019</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #1C5CAB"></span>2024</span>
+</div>
+<svg viewBox="0 0 460 400" role="img" aria-label="Median household income by constituency in 2019 and 2024" style="width: 100%; height: auto; display: block">
+<sc-for list="{{ dumbX }}" as="t" hint-placeholder-count="5">
+<line x1="{{ t.x }}" x2="{{ t.x }}" y1="8" y2="376" stroke="#EEECE6"></line>
+<text x="{{ t.x }}" y="394" text-anchor="middle" font-size="11" fill="#5A5A55">{{ t.label }}</text>
+</sc-for>
+<sc-for list="{{ dumb }}" as="r" hint-placeholder-count="13">
+<text x="108" y="{{ r.ty }}" text-anchor="end" font-size="12" fill="#15181D">{{ r.name }}</text>
+<line x1="{{ r.x1 }}" x2="{{ r.x2 }}" y1="{{ r.y }}" y2="{{ r.y }}" stroke="{{ r.lineColor }}" stroke-width="2"></line>
+<circle cx="{{ r.x1 }}" cy="{{ r.y }}" r="5" fill="#A8A59B" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<circle cx="{{ r.x2 }}" cy="{{ r.y }}" r="6" fill="#1C5CAB" stroke="#FFFFFF" stroke-width="1.5"></circle>
+</sc-for>
+</svg>
+<p style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: #44443F">Pasir Pinji fell from RM4,639 to RM3,165; Canning rose from RM4,169 to RM5,843. Nominal RM per month.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 20px">
+<div style="flex: 1 1 220px; border: 1px solid #E6E4DD; border-radius: 14px; padding: 20px">
+<h3 style="margin: 0 0 10px; font-size: 14px; font-weight: 700">Household poverty, 2024</h3>
+<sc-for list="{{ poverty }}" as="p" hint-placeholder-count="3">
+<div style="display: grid; grid-template-columns: 70px minmax(0, 1fr) 40px; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 8px">
+<span>{{ p.area }}</span><div style="height: 12px; background: #F3F2EE; border-radius: 2px"><div style="{{ p.bar }}"></div></div><strong style="text-align: right">{{ p.v }}</strong>
+</div>
+</sc-for>
+<p style="margin: 4px 0 0; font-size: 12px; color: #5A5A55">Absolute poverty. District is the finest level published.</p>
+</div>
+<div style="flex: 1 1 220px; border: 1px dashed #B3B0A5; border-radius: 14px; padding: 20px; background: #FFFCF8">
+<p style="margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #B9461A">Cross-check didn't agree</p>
+<p style="margin: 8px 0 0; font-size: 13px; line-height: 1.55; color: #2C2C29">Meta's Relative Wealth Index barely tracks DUN income: rank correlation −0.07 across hexagons, −0.17 across DUNs.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="care" style="padding: 64px 0 16px">
+<p style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #1C5CAB">Parts 4–6 · Care, social life, getting around</p>
+<h2 style="margin: 6px 0 10px; font-weight: 800; font-size: 30px; letter-spacing: -0.01em">Care homes, places to meet, buses and internet</h2>
+<p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #44443F; max-width: 820px">Walking time along real streets to the nearest of 18 care homes and 378 bus stops (OpenStreetMap). Care-home places aren't public, and the senior activity centre (PAWE) list failed to download.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+<div style="flex: 1 1 520px; min-width: 0; max-width: 640px; border: 1px solid #E6E4DD; border-radius: 14px; padding: 16px">
+<div role="group" aria-label="Layer" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px">
+<sc-for list="{{ careTabs }}" as="t" hint-placeholder-count="2"><button type="button" onClick="{{ t.pick }}" aria-pressed="{{ t.pressed }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+</div>
+<svg viewBox="0 0 740 800" role="img" aria-label="{{ careAria }}" style="width: 100%; height: auto; display: block">
+<sc-if value="{{ cl.care }}" hint-placeholder-val="{{ true }}"><image href="/_blob/8d852648a794d085f2ae5e02cad8a398" x="0" y="0" width="740" height="800" preserveAspectRatio="none" opacity="0.92"></image></sc-if>
+<sc-if value="{{ cl.bus }}" hint-placeholder-val="{{ false }}"><image href="/_blob/90915baefe967f9568f439bd4a8271a2" x="0" y="0" width="740" height="800" preserveAspectRatio="none" opacity="0.92"></image></sc-if>
+<path d="{{ boundary }}" fill="none" stroke="#15181D" stroke-width="1.6"></path>
+<sc-for list="{{ carePts }}" as="p" hint-placeholder-count="0"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}" fill="{{ p.fill }}" stroke="#FFFFFF" stroke-width="{{ p.sw }}"></circle></sc-for>
+</svg>
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 12px; color: #44443F">
+<span>0 min</span><span style="width: 160px; height: 10px; border-radius: 2px; background: linear-gradient(90deg, #FFF7E6, #FDD49E, #FC8D59, #D7301F, #7F0000)"></span><span>{{ careMax }}</span>
+</div>
+</div>
+<div style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<div style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 22px">
+<h3 style="margin: 0 0 4px; font-size: 16px; font-weight: 700">Bus access thins out fast</h3>
+<p style="margin: 0 0 14px; font-size: 13px; color: #5A5A55">Share of residents 65+, distance along streets. BAS.MY timetable: 369 weekday trips.</p>
+<sc-for list="{{ bus }}" as="b" hint-placeholder-count="5">
+<div style="display: grid; grid-template-columns: 170px minmax(0, 1fr) 40px; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 10px">
+<span>{{ b.label }}</span><div style="height: 18px; background: #F3F2EE; border-radius: 3px"><div style="{{ b.bar }}"></div></div><strong style="text-align: right; font-variant-numeric: tabular-nums">{{ b.pct }}</strong>
+</div>
+</sc-for>
+</div>
+<div style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 22px">
+<h3 style="margin: 0 0 4px; font-size: 16px; font-weight: 700">Places to meet within a 10-minute walk</h3>
+<p style="margin: 0 0 14px; font-size: 13px; color: #5A5A55">39% of residents 65+ have none of these five kinds nearby; 19% have three or more. Bars: places mapped in OSM.</p>
+<sc-for list="{{ social }}" as="s" hint-placeholder-count="5">
+<div style="display: grid; grid-template-columns: 170px minmax(0, 1fr) 40px; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 10px">
+<span>{{ s.kind }}</span><div style="height: 18px; background: #F3F2EE; border-radius: 3px"><div style="{{ s.bar }}"></div></div><span style="text-align: right; font-variant-numeric: tabular-nums">{{ s.n }}</span>
+</div>
+</sc-for>
+</div>
+<div style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 22px; display: flex; flex-wrap: wrap; gap: 24px; align-items: baseline">
+<div><p style="margin: 0; font-weight: 800; font-size: 32px">244 <span style="font-size: 15px; font-weight: 600">Mbps</span></p><p style="margin: 2px 0 0; font-size: 13px; color: #5A5A55">median fixed internet</p></div>
+<div><p style="margin: 0; font-weight: 800; font-size: 32px">222 <span style="font-size: 15px; font-weight: 600">Mbps</span></p><p style="margin: 2px 0 0; font-size: 13px; color: #5A5A55">median mobile</p></div>
+<p style="margin: 0; font-size: 12px; color: #5A5A55; flex: 1 1 100%">Ookla open data, 2026 Q3 (CC BY-NC-SA 4.0).</p>
+</div>
+</div>
+</div>
+</section>
+
+<section id="index" style="padding: 64px 0 16px">
+<p style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #1C5CAB">Part 7 · Index</p>
+<h2 style="margin: 6px 0 10px; font-weight: 800; font-size: 30px; letter-spacing: -0.01em">The ageing-vulnerability index</h2>
+<p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #44443F; max-width: 820px">12 metrics turned into 0–100 percentile scores (higher = worse for an older person), averaged into five domains and one index. A Monte Carlo test re-weighted the domains 3,000 times.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+<div style="flex: 1 1 520px; min-width: 0; max-width: 640px; border: 1px solid #E6E4DD; border-radius: 14px; padding: 16px">
+<div role="group" aria-label="Index layer" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px">
+<sc-for list="{{ idxTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.pick }}" aria-pressed="{{ t.pressed }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+</div>
+<svg viewBox="0 0 740 800" role="img" aria-label="{{ idxAria }}" style="width: 100%; height: auto; display: block">
+<sc-if value="{{ il.index }}" hint-placeholder-val="{{ true }}"><image href="/_blob/514a293e6419967f9e81f3ad2ab1d4c6" x="0" y="0" width="740" height="800" preserveAspectRatio="none"></image></sc-if>
+<sc-if value="{{ il.money }}" hint-placeholder-val="{{ false }}"><image href="/_blob/a0408dd146c8f4cf03ddfd17c4508445" x="0" y="0" width="740" height="800" preserveAspectRatio="none"></image></sc-if>
+<sc-if value="{{ il.health }}" hint-placeholder-val="{{ false }}"><image href="/_blob/d1447b4ce4a1dcc38f760cb0e5b465f3" x="0" y="0" width="740" height="800" preserveAspectRatio="none"></image></sc-if>
+<sc-if value="{{ il.care }}" hint-placeholder-val="{{ false }}"><image href="/_blob/4588510aa543de3374d6ac7a48ab5180" x="0" y="0" width="740" height="800" preserveAspectRatio="none"></image></sc-if>
+<sc-if value="{{ il.social }}" hint-placeholder-val="{{ false }}"><image href="/_blob/dfc6503218096da0ed4157cd52d4fc5b" x="0" y="0" width="740" height="800" preserveAspectRatio="none"></image></sc-if>
+<sc-if value="{{ il.access }}" hint-placeholder-val="{{ false }}"><image href="/_blob/513e226f0d0dbf469fca1dbd775cbed5" x="0" y="0" width="740" height="800" preserveAspectRatio="none"></image></sc-if>
+<sc-for list="{{ dunOutlines }}" as="d" hint-placeholder-count="0"><path d="{{ d.d }}" fill="none" stroke="#15181D" stroke-width="0.8" stroke-opacity="0.45"></path></sc-for>
+<path d="{{ boundary }}" fill="none" stroke="#15181D" stroke-width="1.6"></path>
+</svg>
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 12px; color: #44443F">
+<span>0 better</span><span style="width: 160px; height: 10px; border-radius: 2px; background: linear-gradient(90deg, #F2F7F2, #D9ECD0, #FDD49E, #E34A33, #7F0000)"></span><span>100 worse</span><span style="margin-left: 6px; color: #5A5A55">thin lines = DUNs</span>
+</div>
+</div>
+<div style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<div style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 22px">
+<h3 style="margin: 0 0 4px; font-size: 16px; font-weight: 700">The worst-off fifth scores far worse on every domain</h3>
+<p style="margin: 0 0 14px; font-size: 13px; color: #5A5A55">Average domain score by index band; each band holds about 14,800 residents 65+.</p>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{ bandCharts }}" as="c" hint-placeholder-count="5">
+<div>
+<p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; text-align: center">{{ c.name }}</p>
+<div style="height: 120px; display: flex; align-items: flex-end; gap: 3px; border-bottom: 1px solid #C9C6BC">
+<sc-for list="{{ c.bars }}" as="b" hint-placeholder-count="5"><div title="{{ b.tip }}" style="{{ b.style }}"></div></sc-for>
+</div>
+<p style="margin: 4px 0 0; display: flex; justify-content: space-between; font-size: 10px; color: #5A5A55"><span>Q1</span><span>Q5</span></p>
+<p style="margin: 2px 0 0; font-size: 11px; text-align: center; color: #44443F">{{ c.range }}</p>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 22px">
+<h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 700">Index by constituency</h3>
+<sc-for list="{{ idx }}" as="r" hint-placeholder-count="13">
+<div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 28px; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 6px">
+<span>{{ r.name }}</span><div style="height: 14px; background: #F3F2EE; border-radius: 2px"><div style="{{ r.bar }}"></div></div><strong style="text-align: right; font-variant-numeric: tabular-nums">{{ r.v }}</strong>
+</div>
+</sc-for>
+<p style="margin: 10px 0 0; font-size: 13px; color: #44443F">28 hexagons stay in the worst 10% under ≥80% of random weightings (153 residents 65+). <a href="IndexExplorer.dc.html" style="font-weight: 700">Change the weights →</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<section id="gaps" style="padding: 64px 0 16px">
+<p style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #1C5CAB">Part 8 · Gaps</p>
+<h2 style="margin: 6px 0 10px; font-weight: 800; font-size: 30px; letter-spacing: -0.01em">What public data can't tell us</h2>
+<p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #44443F; max-width: 820px">Distance to a place isn't the same as getting care. These need the survey or a data request.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px">
+<sc-for list="{{ gaps }}" as="g" hint-placeholder-count="6">
+<div style="border: 1px dashed #B3B0A5; border-radius: 12px; padding: 18px 20px">
+<p style="margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #B9461A">{{ g.domain }}</p>
+<p style="margin: 8px 0 0; font-size: 15px; font-weight: 600; line-height: 1.4">{{ g.what }}</p>
+<p style="margin: 6px 0 0; font-size: 14px; color: #5A5A55">{{ g.how }}</p>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="simulate" style="margin: 56px 0 72px; padding: 40px; border-radius: 18px; background: #0D366B; color: #FFFFFF">
+<h2 style="margin: 0; font-weight: 800; font-size: 30px; letter-spacing: -0.01em">Test what would change it</h2>
+<p style="margin: 10px 0 28px; font-size: 16px; color: #DCE9F9; max-width: 720px">Use the same hexagons and facilities to try out new clinics, care homes or bus stops.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px">
+<a href="PlaceFacility.dc.html" style="display: flex; flex-direction: column; gap: 6px; padding: 22px; background: #FFFFFF; border-radius: 12px; color: #15181D; text-decoration: none"><strong style="font-size: 17px">Place a facility</strong><span style="font-size: 14px; color: #44443F">Click a spot and see who gains access.</span></a>
+<a href="Optimizer.dc.html" style="display: flex; flex-direction: column; gap: 6px; padding: 22px; background: #FFFFFF; border-radius: 12px; color: #15181D; text-decoration: none"><strong style="font-size: 17px">Find the best sites</strong><span style="font-size: 14px; color: #44443F">Pick 1, 3 or 10 sites for the most coverage.</span></a>
+<a href="IndexExplorer.dc.html" style="display: flex; flex-direction: column; gap: 6px; padding: 22px; background: #FFFFFF; border-radius: 12px; color: #15181D; text-decoration: none"><strong style="font-size: 17px">Re-weight the index</strong><span style="font-size: 14px; color: #44443F">See how the constituency ranking shifts.</span></a>
+</div>
+</section>
+</main>
+
+<footer style="border-top: 1px solid #E6E4DD">
+<div style="max-width: 1280px; margin: 0 auto; padding: 32px; font-size: 13px; line-height: 1.6; color: #5A5A55">
+<p style="margin: 0; max-width: 900px">Sources: DOSM Census 2020 (Kinta: Fakta dan Angka) · OpenDOSM population, HIES income and poverty · data.gov.my hospital beds · Meta 30 m population layer and Relative Wealth Index · OpenStreetMap contributors · Healthsites.io · KKM clinic list · BAS.MY GTFS · Ookla open data (CC BY-NC-SA 4.0) · MECo DUN boundaries. Travel-time surfaces are the notebook's own routed outputs.</p>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":6400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { data: null, pLayer: 'p65', hLayer: 'walk_clinic', cLayer: 'care', iLayer: 'index', pHover: null, hHover: null, mHover: null, cross: null, chapter: 0, paused: false };
+  }
+  componentDidMount() {
+    var self = this;
+    fetch('/_blob/63c56affcfd33efe8989c0336fd7d90d').then(function (r) { return r.json(); }).then(function (d) { self.setState({ data: d }); }).catch(function () {});
+    this.startTimer();
+  }
+  componentWillUnmount() { if (this._t) clearInterval(this._t); }
+  startTimer() {
+    var self = this;
+    if (this._t) clearInterval(this._t);
+    this._t = setInterval(function () { if (!self.state.paused) self.setState({ chapter: (self.state.chapter + 1) % 6 }); }, 6500);
+  }
+  renderVals() {
+    var self = this, s = this.state, D = s.data;
+    var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
+    var hex2 = function (h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; };
+    var ramp = function (stops, t) {
+      t = Math.max(0, Math.min(1, t)); var n = stops.length - 1, i = Math.min(n - 1, Math.floor(t * n)), f = t * n - i;
+      var a = hex2(stops[i]), b = hex2(stops[i + 1]);
+      return 'rgb(' + [0, 1, 2].map(function (k) { return Math.round(a[k] + (b[k] - a[k]) * f); }).join(',') + ')';
+    };
+    var BLUES = ['#EEF4FC', '#CDE2FB', '#86B6EF', '#1C5CAB', '#0D366B'];
+    var ORANGES = ['#FFF4EC', '#FDE0CC', '#F8B48C', '#B9461A', '#6E2408'];
+    var tab = function (on) {
+      return 'min-height: 38px; padding: 0 12px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid ' + (on ? '#15181D' : '#DAD8D0') + '; background: ' + (on ? '#15181D' : '#FFFFFF') + '; color: ' + (on ? '#FFFFFF' : '#15181D');
+    };
+    var tabs = function (list, key) {
+      return list.map(function (x) { var on = s[key] === x[0]; var o = {}; o[key] = x[0]; return { label: x[1], pressed: on ? 'true' : 'false', style: tab(on), pick: function () { self.setState(o); } }; });
+    };
+    var legendBar = function (stops) { return 'width: 160px; height: 10px; border-radius: 2px; background: linear-gradient(90deg, ' + stops.join(', ') + ')'; };
+
+    // ---- People map
+    var PL = { p65: { label: 'Aged 65+', key: 'p65', max: 320, stops: ORANGES, unit: 'residents 65+ per hexagon', lo: '0', hi: '320+' },
+               pop: { label: 'All residents', key: 'pop', max: 2600, stops: BLUES, unit: 'residents per hexagon', lo: '0', hi: '2,600' },
+               pct: { label: 'Share 65+', key: 'pct', max: 14, stops: ORANGES, unit: '% aged 65+ (Census 2020 shares)', lo: '8%', hi: '14%' } };
+    var pl = PL[s.pLayer];
+    var peopleHex = D ? D.hex.map(function (h) {
+      var v = h[pl.key], t = pl.key === 'pct' ? (v - 8) / 6 : Math.sqrt(v / pl.max);
+      return { d: h.d, fill: ramp(pl.stops, t), hover: function () { self.setState({ pHover: h }); } };
+    }) : [];
+    var ph = s.pHover;
+    var pHover = ph ? { title: (ph.dun ? ph.dun + ' · ' : '') + ph.area, body: fmt(ph.pop) + ' residents\n' + fmt(ph.p65) + ' aged 65+ (' + ph.pct.toFixed(1) + '%)' } : { title: 'Hover a hexagon', body: '772,527 residents · 74,207 aged 65+\n841 hexagons of 400 m' };
+
+    // ---- Health map
+    var HL = { walk_clinic: ['Walk · clinic', 0, '60+ min', 'clinic'], walk_hospital: ['Walk · hospital', 0, '90+ min', 'hospital'], drive_clinic: ['Drive · clinic', 0, '20+ min', 'clinic'], drive_hospital: ['Drive · hospital', 0, '30+ min', 'hospital'], capacity: ['Clinic capacity', 0, '0.70 per 10k', 'clinic'] };
+    var hlCur = HL[s.hLayer];
+    var hl = {}; Object.keys(HL).forEach(function (k) { hl[k] = k === s.hLayer; });
+    var ptsType = hlCur[3];
+    var healthPts = D ? D.fac[ptsType].filter(function (p) { return p.x >= 0 && p.x <= 740 && p.y >= 0 && p.y <= 800; }).map(function (p) {
+      return { x: p.x, y: p.y, fill: ptsType === 'clinic' ? '#1C5CAB' : '#15181D', hover: function () { self.setState({ hHover: p }); } };
+    }) : [];
+    var hh = s.hHover;
+    var isCap = s.hLayer === 'capacity';
+    var CAPRAMP = ['#EEF4FC', '#CDE2FB', '#86B6EF', '#1C5CAB', '#0D366B'], HEAT = ['#FFF7E6', '#FDD49E', '#FC8D59', '#D7301F', '#7F0000'];
+
+    // ---- Curves
+    var CUR = [
+      { label: 'Clinic · walk', color: '#1C5CAB', dash: '', y: [0,0,0,0.2,0.3,0.3,0.3,0.3,0.8,0.9,1,2.1,3.1,4.4,4.9,5.8,6.6,7.8,10.5,11.6,12.6,12.9,14.8,16.3,19.7,20.9,22.6,23.5,24.2,26.7,27.2,30.2,32.1,32.6,32.8,35.2,36.6,38,38.5,42,44.7,46.6,48.3,49.5,51.6,53.2,54.2,54.4,54.8,56.4,57.8,59.2,59.4,61.2,62.2,64.2,64.8,65.7,66.7,67.6,68.5,69.1,70.8,71.5,72.3,72.7,74.6,75.2,75.4,76.2,76.7,76.9,77.3,77.9,79,79,80.1,81.1,82.1,83.4,83.8,83.9,84.5,85.7,85.8,85.8,86,86,86.3,86.4,86.6] },
+      { label: 'Clinic · drive', color: '#1C5CAB', dash: '5 4', y: [0,0,0,1.2,3,21.4,34.9,49,61.5,75.9,83.9,88.4,92.6,94.4,95.9,98,98.1,98.8,99.3,99.3,99.6,99.6,99.7,99.7,99.7,99.7,99.8,99.8,99.8,99.8,99.8] },
+      { label: 'Hospital · walk', color: '#B9461A', dash: '', y: [0,0,0,0,1.3,1.5,1.7,1.9,2.8,2.8,2.9,2.9,3.3,3.4,4.6,5.1,5.2,5.9,6.3,6.3,6.3,6.4,6.4,6.5,6.8,8.6,9.9,9.9,10.1,11,11.2,13.4,14.5,14.9,15,15.5,15.6,16.2,17.2,18.6,20.1,20.8,21.5,21.5,23.7,24.4,25.4,28.1,28.2,28.2,28.6,28.7,29.3,30.4,31.4,31.5,32.7,34.8,34.9,34.9,34.9,36,36.1,38.6,39.8,40.2,41.6,41.6,42,42,43.3,43.5,44.5,44.6,46.7,46.9,47.5,48.1,48.3,49,50.9,54.3,54.3,55.4,56.3,56.5,56.6,58.3,59.5,60,61.1] },
+      { label: 'Hospital · drive', color: '#B9461A', dash: '5 4', y: [0,0,0,0,3.4,7.2,13.2,22.8,31.7,43.8,54,66.7,71.9,81,87.1,92.4,95.8,96.3,97.2,98.1,98.1,98.7,99.1,99.5,99.5,99.6,99.7,99.8,99.8,99.8,99.8] }
+    ];
+    var XMAX = 90, X0 = 40, XW = 410, Y0 = 250, YH = 240;
+    var sx = function (m) { return X0 + m / XMAX * XW; }, sy = function (v) { return Y0 - v / 100 * YH; };
+    var valAt = function (c, m) { return m < c.y.length ? c.y[m] : c.y[c.y.length - 1]; };
+    var curves = CUR.map(function (c) {
+      var pts = []; for (var m = 0; m <= XMAX; m++) pts.push(sx(m).toFixed(1) + ',' + sy(valAt(c, m)).toFixed(1));
+      return { d: 'M' + pts.join('L'), color: c.color, dash: c.dash };
+    });
+    var cross = { show: false, x: 0, dots: [], rows: [], min: 0, boxStyle: '' };
+    if (s.cross != null) {
+      var m = s.cross, x = sx(m);
+      cross = { show: true, x: x.toFixed(1), min: m,
+        dots: CUR.map(function (c) { return { y: sy(valAt(c, m)).toFixed(1), color: c.color }; }),
+        rows: CUR.map(function (c) { return { label: c.label, v: valAt(c, m).toFixed(0) + '%' }; }),
+        boxStyle: 'position: absolute; top: 8px; ' + (m > 45 ? 'left: 12%' : 'right: 4%') + '; background: #FFFFFF; border: 1px solid #DAD8D0; border-radius: 8px; padding: 8px 10px; font-size: 12px; min-width: 150px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); pointer-events: none' };
+    }
+
+    // ---- Money
+    var dunShapes = D ? D.dun.map(function (d) {
+      var t = (d.income - 3165) / (7335 - 3165), dark = t > 0.55, off = { 'Menglembu': [-30, -8], 'Tebing Tinggi': [12, 14] }[d.name] || [0, 0];
+      return { d: d.d, fill: ramp(BLUES, 0.1 + t * 0.9), x: d.x + off[0], y: d.y + off[1], y2: d.y + off[1] + 14, name: d.name, inc: 'RM' + fmt(d.income), ink: dark ? '#FFFFFF' : '#15181D', hover: function () { self.setState({ mHover: d }); } };
+    }) : [];
+    var mh = s.mHover;
+    var P65DUN = { 'Pasir Pinji': 4711, 'Menglembu': 4560, 'Bercham': 4697, 'Tebing Tinggi': 5400, 'Buntong': 2985, 'Jelapang': 2623, 'Sungai Rapat': 4957, 'Teja': 167, 'Manjoi': 14779, 'Hulu Kinta': 11581, 'Canning': 6298, 'Simpang Pulai': 6937, 'Kepayang': 4512 };
+    var mHover = mh ? { title: mh.code + ' ' + mh.name, body: 'Median RM' + fmt(mh.income) + ' / month\n' + fmt(P65DUN[mh.name] || 0) + ' residents 65+ in Ipoh' } : { title: 'Hover a constituency', body: '13 DUNs · DOSM HIES 2024' };
+    var DUMB = [['Pasir Pinji', 4639, 3165], ['Menglembu', 3258, 3943], ['Bercham', 4858, 4417], ['Tebing Tinggi', 4783, 4434], ['Buntong', 3578, 4619], ['Jelapang', 4094, 4623], ['Sungai Rapat', 4062, 4988], ['Teja', 4066, 5145], ['Manjoi', 5160, 5528], ['Hulu Kinta', 4842, 5720], ['Canning', 4169, 5843], ['Simpang Pulai', 4988, 5992], ['Kepayang', 4466, 7335]];
+    var dx = function (v) { return 120 + (v - 3000) / 4500 * 330; };
+    var dumb = DUMB.map(function (r, i) { var y = 18 + i * 27.5; return { name: r[0], y: y, ty: y + 4, x1: dx(r[1]).toFixed(1), x2: dx(r[2]).toFixed(1), lineColor: r[2] < r[1] ? '#B9461A' : '#86B6EF' }; });
+    var dumbX = [3000, 4000, 5000, 6000, 7000].map(function (v) { return { x: dx(v).toFixed(1), label: 'RM' + (v / 1000) + 'k' }; });
+
+    // ---- Care / bus
+    var careFac = s.cLayer === 'care' ? 'care' : 'bus';
+    var carePts = D ? D.fac[careFac].filter(function (p) { return p.x >= 0 && p.x <= 740 && p.y >= 0 && p.y <= 800; }).map(function (p) {
+      return careFac === 'care' ? { x: p.x, y: p.y, r: 7, fill: '#6E2408', sw: 2.5 } : { x: p.x, y: p.y, r: 2.6, fill: '#15181D', sw: 0.8 };
+    }) : [];
+
+    var il = {}; ['index', 'money', 'health', 'care', 'social', 'access'].forEach(function (k) { il[k] = k === s.iLayer; });
+    var BANDS = [['Money', [16.6, 47.9, 60.7, 54.2, 53.2]], ['Health', [23, 25.7, 36.3, 46.6, 69]], ['Care', [10.5, 22.9, 33.2, 49.5, 72.4]], ['Social', [19.6, 24, 33.2, 55.9, 67.2]], ['Access', [28.3, 36.5, 38.3, 48.7, 69.8]]];
+    var bandCharts = BANDS.map(function (b) {
+      return { name: b[0], range: Math.round(b[1][0]) + ' → ' + Math.round(b[1][4]),
+        bars: b[1].map(function (v, i) { return { tip: 'Q' + (i + 1) + ': ' + v.toFixed(0), style: 'flex: 1 1 0; height: ' + v + '%; background: ' + (i === 4 ? '#B9461A' : '#86B6EF') + '; border-radius: 3px 3px 0 0' }; }) };
+    });
+    var bar = function (pct, col) { return 'width: ' + pct.toFixed(1) + '%; height: 100%; border-radius: 2px; background: ' + col; };
+
+    // ---- Cinematic hero
+    var CH = [
+      { key: 'intro', tab: 'Ageing in Ipoh', kicker: 'LANDSCAPE STUDY · IPOH, PERAK', h1: '74,207 older residents.', h2: 'How far is care?', body: 'Where people aged 65+ live in Ipoh, and how far they are from clinics, income, company and transport. Measured on 841 hexagons of 400 m, from public data only.', facts: ['772,527 people', '841 hexagons', 'Public data only'], cta: 'Read the analysis', href: '#findings' },
+      { key: 'people', tab: 'People', kicker: '01 / PEOPLE', h1: 'One in ten is 65+.', h2: 'More in the old town.', body: '9.6% of Ipoh is aged 65+. In Bandar Ipoh (S) it is 16.3%. Each hexagon here glows with the number of older residents living in it.', facts: ['74,207 aged 65+', 'Census 2020 shares', 'Meta 30 m layer'], cta: 'Where they live', href: '#people' },
+      { key: 'health', tab: 'Health', kicker: '02 / HEALTH', h1: 'Close by car.', h2: 'Far on foot.', body: '73% of residents 65+ live more than a 30-minute walk from a public clinic, yet 84% are within 10 minutes by car. Pale = close, dark red = far.', facts: ['19 public clinics', 'Routed on real streets', '54,039 beyond 30 min'], cta: 'Travel times', href: '#health' },
+      { key: 'money', tab: 'Money', kicker: '03 / MONEY', h1: 'Same city.', h2: 'Twice the income.', body: 'Median household income runs from RM3,165 a month in Pasir Pinji to RM7,335 in Kepayang, across the 13 constituencies that cover Ipoh.', facts: ['13 DUNs', 'DOSM HIES 2024', 'Official medians'], cta: 'Income by area', href: '#money' },
+      { key: 'access', tab: 'Getting around', kicker: '04 / GETTING AROUND', h1: 'A stop nearby.', h2: 'A bus, rarely.', body: '16% of residents 65+ live within 400 m of a bus stop. Only 1% live near a stop served by two or more buses an hour.', facts: ['378 bus stops', 'BAS.MY timetable', '369 weekday trips'], cta: 'Care, social, access', href: '#care' },
+      { key: 'index', tab: 'Index', kicker: '05 / VULNERABILITY INDEX', h1: 'Where it all', h2: 'adds up.', body: 'Five domains in one 0–100 score. Menglembu ranks most vulnerable at 52; Manjoi follows, home to 14,779 residents 65+.', facts: ['12 metrics', '5 domains', '3,000 re-weightings'], cta: 'Explore the index', href: '#index' }
+    ];
+    var chap = s.chapter;
+    var cw = {};
+    CH.forEach(function (c, i) {
+      var on = i === chap;
+      cw[c.key] = 'position: absolute; inset: 0; transition: opacity 1.1s ease, transform 7s ease-out; opacity: ' + (on ? 1 : 0) + '; transform: scale(' + (on ? 1 : 1.05) + ') translateX(' + (on ? '0' : '24px') + ')';
+    });
+    var chapters = CH.map(function (c, i) {
+      var on = i === chap, past = i < chap;
+      return { kicker: c.kicker, h1: c.h1, h2: c.h2, body: c.body, facts: c.facts, cta: c.cta, href: c.href, hidden: on ? 'false' : 'true', tab: on ? '0' : '-1',
+        style: 'position: absolute; left: 32px; top: 50%; width: min(600px, calc(100% - 64px)); transition: opacity 0.7s ease, transform 0.9s cubic-bezier(.2,.7,.2,1); opacity: ' + (on ? 1 : 0) + '; transform: translateY(calc(-54% + ' + (on ? 0 : (past ? -40 : 40)) + 'px)); pointer-events: ' + (on ? 'auto' : 'none') };
+    });
+    var cTabs = CH.map(function (c, i) {
+      var on = i === chap;
+      return { n: '0' + i, label: c.tab, on: on, sel: on ? 'true' : 'false',
+        pick: function () { self.setState({ chapter: i }); self.startTimer(); },
+        bar: 'position: absolute; left: 0; right: 0; top: -1px; height: 2px; background: #F8B48C; animation-play-state: ' + (s.paused ? 'paused' : 'running'),
+        style: 'position: relative; min-height: 60px; padding: 18px 0 20px; border: 0; background: none; text-align: left; font: inherit; font-size: 13px; cursor: pointer; color: ' + (on ? '#FFFFFF' : 'rgba(220,233,249,0.55)') };
+    });
+    var DARKB = ['#10202F', '#1C3D5E', '#2F6DA8', '#86B6EF'], DARKO = ['#14212D', '#5A3524', '#B9461A', '#F8B48C', '#FFF4EC'], DARKM = ['#1B3550', '#2E5C8A', '#86B6EF', '#DCE9F9'];
+    var cineHexAll = D ? D.hex.map(function (h) { return { d: h.d, fill: ramp(DARKB, Math.sqrt(h.pop / 2600)) }; }) : [];
+    var cineHex65 = D ? D.hex.map(function (h) { return { d: h.d, fill: ramp(DARKO, Math.sqrt(h.p65 / 320)) }; }) : [];
+    var cineDun = D ? D.dun.map(function (d) { var t = (d.income - 3165) / 4170; return { d: d.d, fill: ramp(DARKM, t), x: d.x, y: d.y, inc: 'RM' + fmt(d.income), ink: t > 0.6 ? '#0A1622' : '#FFFFFF' }; }) : [];
+    var inFrame = function (p) { return p.x >= 0 && p.x <= 740 && p.y >= 0 && p.y <= 800; };
+    var cineClinics = D ? D.fac.clinic.filter(inFrame) : [];
+    var cineBus = D ? D.fac.bus.filter(inFrame) : [];
+
+    return {
+      cw: cw, chapters: chapters, tabs: cTabs, counter: (chap === 0 ? '00' : '0' + chap) + ' / 05',
+      cineHexAll: cineHexAll, cineHex65: cineHex65, cineDun: cineDun, cineClinics: cineClinics, cineBus: cineBus,
+      pause: function () { if (!s.paused) self.setState({ paused: true }); },
+      resume: function () { if (s.paused) self.setState({ paused: false }); },
+      loading: !D,
+      boundary: D ? D.boundary : '',
+      toc: [
+        { label: 'Key findings', href: '#findings' }, { label: 'People', href: '#people' }, { label: 'Health', href: '#health' },
+        { label: 'Money', href: '#money' }, { label: 'Care, social, access', href: '#care' }, { label: 'Index', href: '#index' },
+        { label: 'Gaps', href: '#gaps' }, { label: 'Simulators', href: '#simulate' }
+      ],
+      findings: [
+        { domain: 'People', num: '74,207', text: 'residents aged 65+ in 2026, 9.6% of 772,527. Central Ipoh is older: 16.3% in Bandar Ipoh (S).' },
+        { domain: 'Health', num: '73%', text: 'of residents 65+ live more than a 30-minute walk from a public clinic. By car, 84% get there within 10 minutes.' },
+        { domain: 'Money', num: 'RM3,165', text: 'median household income in Pasir Pinji, less than half of Kepayang’s RM7,335.' },
+        { domain: 'Social', num: '39%', text: 'of residents 65+ have no park, hall, kopitiam, market or place of worship within a 10-minute walk.' },
+        { domain: 'Access', num: '1%', text: 'of residents 65+ live within 400 m of a bus stop with 2 or more buses an hour.' },
+        { domain: 'Index', num: 'Menglembu', text: 'ranks most vulnerable (52/100), then Manjoi, home to 14,779 residents 65+, the most of any DUN.' }
+      ],
+      peopleTabs: tabs([['p65', 'Aged 65+'], ['pop', 'All residents'], ['pct', 'Share 65+']], 'pLayer'),
+      peopleHex: peopleHex, pHover: pHover, peopleAria: 'Hexagon map of Ipoh: ' + pl.unit,
+      peopleLegend: { lo: pl.lo, hi: pl.hi, unit: pl.unit, bar: legendBar(pl.stops) },
+      census: [['Bandar Menglembu', 19.6], ['Bandar Ipoh (S)', 16.3], ['Bandar Ipoh (U)', 10.9], ['Mukim Hulu Kinta', 9.2], ['Bandar Tambun', 7.0]].map(function (c) {
+        return { area: c[0], pct: c[1].toFixed(1) + '%', bar: 'height: 100%; border-radius: 0 3px 3px 0; width: ' + (c[1] / 20 * 100).toFixed(1) + '%; background: ' + (c[1] > 9.61 ? '#B9461A' : '#A8A59B') };
+      }),
+      healthTabs: tabs([['walk_clinic', 'Walk · clinic'], ['walk_hospital', 'Walk · hospital'], ['drive_clinic', 'Drive · clinic'], ['drive_hospital', 'Drive · hospital'], ['capacity', 'Clinic capacity']], 'hLayer'),
+      hl: hl, healthPts: healthPts, healthAria: 'Map of ' + hlCur[0] + ' across Ipoh',
+      hHover: hh ? { title: hh.n || 'Facility', body: ptsType === 'clinic' ? 'Public clinic (KKM)' : 'Hospital (public or private)' } : { title: hlCur[0], body: 'Hover a point for its name. Darker red = longer trip.' },
+      healthLegend: { lo: isCap ? '0' : '0 min', hi: hlCur[2], bar: legendBar(isCap ? CAPRAMP : HEAT), pts: ptsType === 'clinic' ? '19 public clinics' : '15 hospitals', dot: 'width: 10px; height: 10px; border-radius: 50%; border: 2px solid #FFFFFF; box-shadow: 0 0 0 1px #C9C6BC; background: ' + (ptsType === 'clinic' ? '#1C5CAB' : '#15181D') },
+      curves: curves, cross: cross, x30: sx(30).toFixed(1),
+      curveLegend: CUR.map(function (c) { return { label: c.label, color: c.color, dash: c.dash }; }),
+      yTicks: [0, 25, 50, 75, 100].map(function (v) { return { y: sy(v).toFixed(1), ty: (sy(v) + 4).toFixed(1), label: v + '%' }; }),
+      xTicks: [0, 15, 30, 45, 60, 75, 90].map(function (v) { return { x: sx(v).toFixed(1), label: String(v) }; }),
+      onCurveMove: function (e) {
+        var r = e.currentTarget.getBoundingClientRect();
+        var m = Math.round((e.clientX - r.left) / r.width * XMAX);
+        m = Math.max(0, Math.min(XMAX, m));
+        if (m !== s.cross) self.setState({ cross: m });
+      },
+      onCurveLeave: function () { self.setState({ cross: null }); },
+      dunShapes: dunShapes, mHover: mHover, dumb: dumb, dumbX: dumbX,
+      poverty: [['Kinta', 3.8], ['Perak', 6.9], ['Malaysia', 5.1]].map(function (p) { return { area: p[0], v: p[1] + '%', bar: bar(p[1] / 8 * 100, p[0] === 'Kinta' ? '#1C5CAB' : '#A8A59B') }; }),
+      careTabs: tabs([['care', 'Walk · care home'], ['bus', 'Walk · bus stop']], 'cLayer'),
+      cl: { care: s.cLayer === 'care', bus: s.cLayer === 'bus' }, carePts: carePts,
+      careAria: s.cLayer === 'care' ? 'Walking time to the nearest care home, with the 18 care homes marked' : 'Walking time to the nearest bus stop, with 378 stops marked',
+      careMax: s.cLayer === 'care' ? '60+ min' : '20+ min',
+      bus: [['Within 500 m of a stop', 23], ['Within 400 m of a stop', 16], ['…stop with 1+ bus/hour', 18], ['…stop with 2+ buses/hour', 1], ['…stop with 4+ buses/hour', 0]].map(function (b) { return { label: b[0], pct: b[1] + '%', bar: bar(Math.max(b[1], 0.6) / 25 * 100, b[1] < 5 ? '#B9461A' : '#1C5CAB') }; }),
+      social: [['Kopitiam / food court', 754], ['Park / exercise', 738], ['Place of worship', 352], ['Market', 171], ['Community hall / library', 55]].map(function (x) { return { kind: x[0], n: String(x[1]), bar: bar(x[1] / 754 * 100, '#1C5CAB') }; }),
+      idxTabs: tabs([['index', 'Overall'], ['money', 'Money'], ['health', 'Health'], ['care', 'Care'], ['social', 'Social'], ['access', 'Access']], 'iLayer'),
+      il: il, idxAria: 'Map of the ' + s.iLayer + ' score across Ipoh', dunOutlines: D ? D.dun : [],
+      bandCharts: bandCharts,
+      idx: [['Menglembu', 52], ['Manjoi', 49], ['Tebing Tinggi', 48], ['Bercham', 47], ['Hulu Kinta', 46], ['Jelapang', 46], ['Sungai Rapat', 44], ['Buntong', 38], ['Pasir Pinji', 38], ['Teja', 32], ['Canning', 25], ['Kepayang', 23], ['Simpang Pulai', 22]].map(function (r) { return { name: r[0], v: String(r[1]), bar: bar(r[1] / 60 * 100, r[1] >= 45 ? '#B9461A' : '#86B6EF') }; }),
+      gaps: [
+        { domain: 'Care', what: 'Care-home places and day-care capacity', how: 'Licensed care-home register from JKM' },
+        { domain: 'Care', what: 'Help needed with daily tasks; living alone', how: 'Survey (Katz ADL, Lawton IADL)' },
+        { domain: 'Health', what: 'Private clinics and pharmacies', how: 'Licensed private clinic register from JKN Perak' },
+        { domain: 'Health', what: 'Self-rated health, chronic conditions, unmet need', how: 'Survey (Perak benchmark from NHMS)' },
+        { domain: 'Money', what: 'Seniors receiving Bantuan Warga Emas', how: 'Data request to JKM, by DUN or mukim' },
+        { domain: 'Social', what: 'Loneliness and social network size', how: 'Survey (UCLA-3, Lubben-6)' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
