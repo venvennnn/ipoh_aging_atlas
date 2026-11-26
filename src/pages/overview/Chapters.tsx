@@ -1,5 +1,9 @@
-import { useMemo, type ReactNode } from 'react';
-import { bestInk, fmt, inFrame, ramp } from '../../lib/format';
+import { useMemo, useState, type ReactNode } from 'react';
+import { BorderSwatch, ColorKey, Dot, KeyItem, LineSwatch } from '../../components/ColorKey';
+import { HoverCard } from '../../components/ui';
+import { bestInk, fmt } from '../../lib/format';
+import AtlasMap, { type CellProps } from '../../map/AtlasMap';
+import { moneyScale, peopleScale, rasterKey } from './keys';
 import type { AtlasData, Stats } from '../../lib/types';
 import { robustRule } from './derive';
 
@@ -16,8 +20,6 @@ interface Chapter {
   href: string;
 }
 
-const ORANGES = ['#FFF4EC', '#FDE0CC', '#F8B48C', '#B9461A', '#6E2408'];
-const BLUES = ['#EEF4FC', '#CDE2FB', '#86B6EF', '#1C5CAB', '#0D366B'];
 
 function chaptersFrom(S: Stats): Chapter[] {
   const P = S.population;
@@ -44,7 +46,7 @@ function chaptersFrom(S: Stats): Chapter[] {
       kicker: '01 / PEOPLE',
       h1: 'One in ten is 65+.',
       h2: 'More in the old town.',
-      body: `${P.pct65.toFixed(1)}% of Ipoh is aged 65+.${bandarS ? ` In Bandar Ipoh (S) it is ${bandarS.pct65.toFixed(1)}%.` : ''} Each hexagon is shaded by the number of older residents living in it.`,
+      body: `${P.pct65.toFixed(1)}% of Ipoh is aged 65+.${bandarS ? ` In Bandar Ipoh (S) it is ${bandarS.pct65.toFixed(1)}%.` : ''} Each 100 m square is shaded by the number of older residents living in it.`,
       facts: [`${fmt(P.aged65_2026)} aged 65+`, 'Census 2020 shares', 'Meta 30 m layer'],
       cta: 'Where they live',
       href: '#people',
@@ -92,13 +94,97 @@ function chaptersFrom(S: Stats): Chapter[] {
   ];
 }
 
-function MapFigure({ label, caption, children }: { label: string; caption: string; children: ReactNode }) {
+/** A chapter's zoomable map with its hover card and colour key. */
+function ChapterMap({ k, S, D }: { k: Exclude<Key, 'intro'>; S: Stats; D: AtlasData | null }) {
+  const [hover, setHover] = useState<string | null>(null);
+  const [cell, setCell] = useState<CellProps | null>(null);
+  const inc = S.money.dun_income.map((d) => d.median_2024);
+  const lo = Math.min(...inc);
+  const hi = Math.max(...inc);
+  const money = useMemo(() => moneyScale(lo, hi), [lo, hi]);
+  const p65 = useMemo(() => (D ? peopleScale('p65', { p65: Math.max(...D.cells.p65), pop: Math.max(...D.cells.pop) }) : null), [D]);
+  const dunFill = useMemo(() => {
+    if (!D || k !== 'money') return null;
+    return Object.fromEntries(D.dun.map((d) => [d.name, money.color(d.income)]));
+  }, [D, k, money]);
+  const dunInk = useMemo(() => (dunFill ? Object.fromEntries(Object.entries(dunFill).map(([n, c]) => [n, bestInk(c)])) : null), [dunFill]);
+  const raster = useMemo(
+    () => (k === 'health' ? { url: '/img/walk_clinic.png' } : k === 'access' ? { url: '/img/walk_bus.png' } : k === 'index' ? { url: '/img/index.png' } : null),
+    [k],
+  );
+  const points = useMemo(
+    () =>
+      !D
+        ? null
+        : k === 'health'
+          ? { list: D.fac.clinic, color: '#1C5CAB', radius: 7, strokeWidth: 2.5 }
+          : k === 'access'
+            ? { list: D.fac.bus, color: '#15181D', radius: 3, strokeWidth: 1 }
+            : null,
+    [D, k],
+  );
+  const p = S.money.dun_income;
+  const dunRow = hover ? p.find((d) => d.dun === hover) : null;
+
+  let label = '';
+  let key: { title: string; stops: string[]; ticks: string[] } | null = null;
+  let extra: ReactNode = <KeyItem swatch={<LineSwatch />}>Ipoh city boundary</KeyItem>;
+  let card = { title: 'Hover the map', body: 'Ctrl/⌘ + scroll or + − to zoom; drag to pan.' };
+  switch (k) {
+    case 'people':
+      label = 'Zoomable street map of residents aged 65+ in each 100 m square across Ipoh';
+      key = p65?.key ?? null;
+      if (cell) card = { title: `${cell.dun ? `${cell.dun} · ` : ''}${cell.area}`, body: `This 100 m square: ${cell.p65.toFixed(1)} aged 65+ of ${cell.pop.toFixed(0)} residents` };
+      break;
+    case 'health':
+      label = `Zoomable street map of walking time to the nearest public clinic, with the ${S.health.clinics} clinics marked`;
+      key = rasterKey(S, 'walk_clinic', 'Walking time to the nearest public clinic');
+      extra = <KeyItem swatch={<Dot color="#1C5CAB" />}>Public clinic ({S.health.clinics})</KeyItem>;
+      if (hover) card = { title: hover, body: 'Public clinic (KKM)' };
+      break;
+    case 'money':
+      label = 'Zoomable street map of median household income by constituency, 2024';
+      key = money.key;
+      extra = <KeyItem swatch={<BorderSwatch />}>Constituency (DUN) border</KeyItem>;
+      if (dunRow) card = { title: dunRow.dun, body: `Median RM${fmt(dunRow.median_2024)} / month (RM${fmt(dunRow.median_2019)} in 2019)` };
+      break;
+    case 'access':
+      label = `Zoomable street map of walking time to the nearest bus stop, with the ${fmt(S.access.bus_stops)} stops marked`;
+      key = rasterKey(S, 'walk_bus', 'Walking time to the nearest bus stop');
+      extra = <KeyItem swatch={<Dot color="#15181D" size={6} ring={false} />}>Bus stop ({fmt(S.access.bus_stops)})</KeyItem>;
+      if (hover) card = { title: hover, body: 'Bus stop' };
+      break;
+    case 'index':
+      label = 'Zoomable street map of the ageing-vulnerability index across Ipoh, with constituency outlines';
+      key = rasterKey(S, 'index', 'Ageing-vulnerability index');
+      extra = (
+        <>
+          <KeyItem swatch={<LineSwatch width={1} opacity={0.5} />}>Constituency (DUN) border</KeyItem>
+          <KeyItem swatch={<LineSwatch />}>Ipoh city boundary</KeyItem>
+        </>
+      );
+      card = { title: 'Ageing-vulnerability index', body: 'Darker red = more vulnerable. Ctrl/⌘ + scroll or + − to zoom.' };
+      break;
+  }
+
   return (
     <figure className="chapter-visual">
-      <svg viewBox="0 0 740 800" role="img" aria-label={label}>
-        {children}
-      </svg>
-      <figcaption>{caption}</figcaption>
+      <AtlasMap
+        D={D}
+        label={label}
+        raster={raster}
+        cellColor={k === 'people' ? (p65?.expr ?? null) : null}
+        points={points}
+        dunFill={dunFill}
+        dunLabels={dunInk}
+        dunOutlines={k === 'index'}
+        onCellHover={k === 'people' ? setCell : undefined}
+        onPointHover={setHover}
+        onDunHover={k === 'money' ? setHover : undefined}
+      >
+        <HoverCard title={card.title} body={card.body} />
+      </AtlasMap>
+      {key && <ColorKey {...key} extra={extra} />}
     </figure>
   );
 }
@@ -106,96 +192,14 @@ function MapFigure({ label, caption, children }: { label: string; caption: strin
 /** The six opening chapters, stacked top to bottom on white. No animation. */
 export default function Chapters({ stats, atlas }: { stats: Stats; atlas: AtlasData | null }) {
   const chapters = useMemo(() => chaptersFrom(stats), [stats]);
-  const art = useMemo(() => {
-    if (!atlas) return null;
-    const inc = atlas.dun.map((d) => d.income);
-    const lo = Math.min(...inc);
-    const hi = Math.max(...inc);
-    return {
-      hex65: atlas.hex.map((h) => ({ d: h.d, fill: ramp(ORANGES, Math.sqrt(h.p65 / 320)) })),
-      dun: atlas.dun.map((d) => {
-        const fill = ramp(BLUES, 0.1 + ((d.income - lo) / (hi - lo)) * 0.9);
-        return { ...d, fill, ink: bestInk(fill) };
-      }),
-      clinics: atlas.fac.clinic.filter(inFrame),
-      bus: atlas.fac.bus.filter(inFrame),
-    };
-  }, [atlas]);
-
-  const B = atlas ? <path d={atlas.boundary} fill="none" stroke="#15181D" strokeWidth={1.6} /> : null;
-
-  const visual = (key: Key): ReactNode => {
-    if (key === 'intro') {
-      return (
-        <figure className="chapter-visual">
-          <img src="/img/ipoh_hero.jpg" alt="Ipoh" />
-        </figure>
-      );
-    }
-    if (!art) return <div className="chapter-visual" aria-hidden="true" />;
-    switch (key) {
-      case 'people':
-        return (
-          <MapFigure label="Hexagon map of residents aged 65+ across Ipoh" caption="Residents 65+ per hexagon">
-            {art.hex65.map((h, i) => (
-              <path key={i} d={h.d} fill={h.fill} stroke="#FFFFFF" strokeWidth={0.6} />
-            ))}
-            {B}
-          </MapFigure>
-        );
-      case 'health':
-        return (
-          <MapFigure label="Walking time to the nearest public clinic, with clinics marked" caption={`Walking time to a public clinic · ${stats.health.clinics} clinics`}>
-            <image href="/img/walk_clinic.png" x={0} y={0} width={740} height={800} preserveAspectRatio="none" opacity={0.92} />
-            {B}
-            {art.clinics.map((p, i) => (
-              <circle key={i} cx={p.x} cy={p.y} r={8} fill="#1C5CAB" stroke="#FFFFFF" strokeWidth={2.5} />
-            ))}
-          </MapFigure>
-        );
-      case 'money':
-        return (
-          <MapFigure label="Median household income by constituency in Ipoh, 2024" caption="Median household income per month, 2024">
-            <defs>
-              <clipPath id="chapter-city">
-                <path d={atlas!.boundary} />
-              </clipPath>
-            </defs>
-            <g clipPath="url(#chapter-city)">
-              {art.dun.map((d) => (
-                <path key={d.code} d={d.d} fill={d.fill} stroke="#FFFFFF" strokeWidth={2} />
-              ))}
-            </g>
-            {B}
-            {art.dun.map((d) => (
-              <text key={d.code} x={d.x} y={d.y} textAnchor="middle" fontSize={12} fontWeight={700} fill={d.ink}>
-                RM{fmt(d.income)}
-              </text>
-            ))}
-          </MapFigure>
-        );
-      case 'access':
-        return (
-          <MapFigure label="Walking time to the nearest bus stop, with stops marked" caption={`Walking time to a bus stop · ${fmt(stats.access.bus_stops)} stops`}>
-            <image href="/img/walk_bus.png" x={0} y={0} width={740} height={800} preserveAspectRatio="none" opacity={0.92} />
-            {B}
-            {art.bus.map((p, i) => (
-              <circle key={i} cx={p.x} cy={p.y} r={2.4} fill="#15181D" />
-            ))}
-          </MapFigure>
-        );
-      case 'index':
-        return (
-          <MapFigure label="Ageing-vulnerability index across Ipoh, with constituency outlines" caption="Vulnerability index, 0 better to 100 worse">
-            <image href="/img/index.png" x={0} y={0} width={740} height={800} preserveAspectRatio="none" />
-            {art.dun.map((d) => (
-              <path key={d.code} d={d.d} fill="none" stroke="#15181D" strokeWidth={0.8} strokeOpacity={0.45} />
-            ))}
-            {B}
-          </MapFigure>
-        );
-    }
-  };
+  const visual = (key: Key): ReactNode =>
+    key === 'intro' ? (
+      <figure className="chapter-visual">
+        <img src="/img/ipoh_hero.jpg" alt="Ipoh" />
+      </figure>
+    ) : (
+      <ChapterMap k={key} S={stats} D={atlas} />
+    );
 
   return (
     <div className="chapters">

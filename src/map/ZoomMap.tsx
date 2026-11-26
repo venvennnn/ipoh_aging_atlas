@@ -36,9 +36,20 @@ export function ZoomMap({
   const onMapRef = useRef(onMap);
   onMapRef.current = onMap;
   const [failed, setFailed] = useState(false);
+  // Create the map only once it is near the screen: the overview has many maps,
+  // and each one holds a WebGL context.
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || near) return;
+    if (typeof IntersectionObserver === 'undefined') return setNear(true);
+    const io = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && setNear(true), { rootMargin: '400px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [near]);
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (!ref.current || !near) return;
     const [lon0, lat0, lon1, lat1] = bounds;
     const padLon = (lon1 - lon0) * 0.6;
     const padLat = (lat1 - lat0) * 0.6;
@@ -77,9 +88,9 @@ export function ZoomMap({
       onMapRef.current(null);
       map.remove();
     };
-    // The map is created once per mount.
+    // The map is created once per mount, when it first comes near the screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [near]);
 
   useEffect(() => {
     const c = ref.current?.querySelector('canvas');

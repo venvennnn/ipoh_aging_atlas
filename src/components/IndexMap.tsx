@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import AtlasMap from '../map/AtlasMap';
 import type { AtlasData, Stats } from '../lib/types';
-import { RampLegend, ToggleGroup } from './ui';
+import { ToggleGroup } from './ui';
+import { ColorKey, KeyItem, LineSwatch } from './ColorKey';
+import { rasterKey } from '../pages/overview/keys';
 
 const LAYERS = [
   { key: 'index', label: 'Overall', img: 'index' },
@@ -17,8 +19,6 @@ type Key = (typeof LAYERS)[number]['key'];
 export default function IndexMap({ atlas, stats }: { atlas: AtlasData | null; stats: Stats }) {
   const [k, setK] = useState<Key>('index');
   const cur = LAYERS.find((l) => l.key === k)!;
-  const meta = stats.rasters.layers[cur.img];
-  const stops = stats.rasters.ramps[meta.ramp];
   const raster = useMemo(() => ({ url: `/img/${cur.img}.png`, opacity: 0.85 }), [cur.img]);
   return (
     <>
@@ -31,7 +31,15 @@ export default function IndexMap({ atlas, stats }: { atlas: AtlasData | null; st
           label={`Zoomable street map of the ${k === 'index' ? 'overall index' : `${cur.label} domain`} score across Ipoh, 0 better to 100 worse, with constituency outlines`}
         />
       </div>
-      <RampLegend lo={`${meta.min} better`} hi={`${meta.max} worse`} stops={stops} unit="thin lines = DUNs" />
+      <ColorKey
+        {...rasterKey(stats, cur.img, k === 'index' ? 'Ageing-vulnerability index' : `${cur.label} domain`)}
+        extra={
+          <>
+            <KeyItem swatch={<LineSwatch width={1} opacity={0.5} />}>Constituency (DUN) border</KeyItem>
+            <KeyItem swatch={<LineSwatch />}>Ipoh city boundary</KeyItem>
+          </>
+        }
+      />
     </>
   );
 }

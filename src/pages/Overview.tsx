@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import IndexMap from '../components/IndexMap';
 import AtlasMap, { type CellProps } from '../map/AtlasMap';
-import { rampExpr } from '../map/expr';
-import { BarRow, HoverCard, LoadError, RampLegend, ToggleGroup } from '../components/ui';
+import { BarRow, HoverCard, LoadError, ToggleGroup } from '../components/ui';
+import { BorderSwatch, ColorKey, Dot, KeyItem, LineSwatch } from '../components/ColorKey';
+import { BLUES, moneyScale, peopleScale, rasterKey, type PeopleKey } from './overview/keys';
 import { bestInk, fmt, ramp, signed } from '../lib/format';
 import type { AtlasData, Dun, Stats } from '../lib/types';
 import { useAtlas, useStats } from '../lib/useData';
@@ -11,8 +12,6 @@ import { AccessCurves, IncomeDumbbell } from './overview/charts';
 import { robustRule } from './overview/derive';
 import Chapters from './overview/Chapters';
 
-const BLUES = ['#EEF4FC', '#CDE2FB', '#86B6EF', '#1C5CAB', '#0D366B'];
-const ORANGES = ['#FFF4EC', '#FDE0CC', '#F8B48C', '#B9461A', '#6E2408'];
 
 const TOC = [
   { label: 'Key findings', href: '#findings' },
@@ -154,7 +153,6 @@ function Findings({ S }: { S: Stats }) {
 
 // ------------------------------------------------------------------ people
 
-type PeopleKey = 'p65' | 'pop' | 'pct';
 
 function People({ S, D }: { S: Stats; D: AtlasData | null }) {
   const P = S.population;
@@ -162,17 +160,9 @@ function People({ S, D }: { S: Stats; D: AtlasData | null }) {
   const [hover, setHover] = useState<CellProps | null>(null);
   // Colour scales run from 0 to the largest 100 m cell in the data.
   const max = useMemo(() => (D ? { p65: Math.max(...D.cells.p65), pop: Math.max(...D.cells.pop) } : null), [D]);
-  const PL = {
-    p65: { stops: ORANGES, unit: 'residents 65+ per 100 m cell', lo: '0', hi: max ? max.p65.toFixed(1) : '' },
-    pop: { stops: BLUES, unit: 'residents per 100 m cell', lo: '0', hi: max ? fmt(max.pop) : '' },
-    pct: { stops: ORANGES, unit: '% aged 65+ (Census 2020 shares)', lo: '8%', hi: '14%+' },
-  } as const;
-  const pl = PL[layer];
-  const color = useMemo(() => {
-    if (!max) return null;
-    if (layer === 'pct') return rampExpr(ORANGES, ['get', 'pct'], 8, 14);
-    return rampExpr(pl.stops as unknown as string[], ['sqrt', ['get', layer]], 0, Math.sqrt(max[layer]));
-  }, [layer, max, pl]);
+  const scale = useMemo(() => (max ? peopleScale(layer, max) : null), [layer, max]);
+  const color = scale?.expr ?? null;
+  const unitLabel = layer === 'p65' ? 'residents 65+ per 100 m square' : layer === 'pop' ? 'residents per 100 m square' : 'share aged 65+';
   const census = [...P.census_2020].sort((a, b) => b.pct65 - a.pct65);
   const censusTotal = P.census_2020.reduce((a, c) => a + c.pop, 0);
   const mukim = P.census_2020.find((c) => c.area === 'Mukim Hulu Kinta');
@@ -200,7 +190,7 @@ function People({ S, D }: { S: Stats; D: AtlasData | null }) {
           <div className="map-wrap" style={{ marginTop: 12 }}>
             <AtlasMap
               D={D}
-              label={`Zoomable street map of Ipoh shaded by ${pl.unit}`}
+              label={`Zoomable street map of Ipoh shaded by ${unitLabel}`}
               cellColor={color}
               onCellHover={setHover}
             >
@@ -214,7 +204,14 @@ function People({ S, D }: { S: Stats; D: AtlasData | null }) {
               />
             </AtlasMap>
           </div>
-          <RampLegend lo={pl.lo} hi={pl.hi} stops={pl.stops as unknown as string[]} unit={pl.unit} />
+          {scale && (
+            <ColorKey
+              {...scale.key}
+              extra={
+                <KeyItem swatch={<LineSwatch />}>Ipoh city boundary</KeyItem>
+              }
+            />
+          )}
         </div>
         <div className="col side-col" style={{ flex: '1 1 360px' }}>
           <div className="card pad-22">
@@ -263,10 +260,6 @@ const HEALTH_LAYERS = [
   { key: 'clinic_capacity', label: 'Clinic capacity', pts: 'clinic' },
 ] as const;
 type HealthKey = (typeof HEALTH_LAYERS)[number]['key'];
-
-function rasterHi(meta: { max: number; unit: string }) {
-  return meta.unit === 'min' ? `${meta.max}+ min` : `${meta.max.toFixed(2)} ${meta.unit}`;
-}
 
 function Health({ S, D }: { S: Stats; D: AtlasData | null }) {
   const [k, setK] = useState<HealthKey>('walk_clinic');
@@ -321,17 +314,12 @@ function Health({ S, D }: { S: Stats; D: AtlasData | null }) {
             />
             </AtlasMap>
           </div>
-          <RampLegend
-            lo={isCap ? `${meta.min}` : `${meta.min} min`}
-            hi={rasterHi(meta)}
-            stops={S.rasters.ramps[meta.ramp]}
+          <ColorKey
+            {...rasterKey(S, k, isCap ? 'Public clinics per 10,000 people' : k.startsWith('walk') ? `Walking time to the nearest ${ptsType === 'clinic' ? 'public clinic' : 'hospital'}` : `Driving time to the nearest ${ptsType === 'clinic' ? 'public clinic' : 'hospital'}`)}
             extra={
-              <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <span
-                  style={{ width: 10, height: 10, borderRadius: '50%', border: '2px solid #FFFFFF', boxShadow: '0 0 0 1px #C9C6BC', background: ptFill }}
-                />
-                {ptsType === 'clinic' ? `${S.health.clinics} public clinics` : `${S.health.hospitals} hospitals`}
-              </span>
+              <KeyItem swatch={<Dot color={ptFill} />}>
+                {ptsType === 'clinic' ? `Public clinic (${S.health.clinics})` : `Hospital (${S.health.hospitals})`}
+              </KeyItem>
             }
           />
         </div>
@@ -403,7 +391,10 @@ function Money({ S, D }: { S: Stats; D: AtlasData | null }) {
             />
             </AtlasMap>
           </div>
-          <RampLegend lo={`RM${fmt(lo.median_2024)}`} hi={`RM${fmt(hi.median_2024)}`} stops={BLUES} unit="median per month, 2024" />
+          <ColorKey
+            {...moneyScale(lo.median_2024, hi.median_2024).key}
+            extra={<KeyItem swatch={<BorderSwatch />}>Constituency (DUN) border</KeyItem>}
+          />
         </div>
         <div className="col side-col">
           <IncomeDumbbell stats={S} />
@@ -443,7 +434,6 @@ function Money({ S, D }: { S: Stats; D: AtlasData | null }) {
 
 function Care({ S, D }: { S: Stats; D: AtlasData | null }) {
   const [k, setK] = useState<'care' | 'bus'>('care');
-  const meta = S.rasters.layers[k === 'care' ? 'walk_care' : 'walk_bus'];
   const [hover, setHover] = useState<string | null>(null);
   const points = useMemo(
     () => (D ? (k === 'care' ? { list: D.fac.care, color: '#6E2408', radius: 7, strokeWidth: 2.5 } : { list: D.fac.bus, color: '#15181D', radius: 3, strokeWidth: 1 }) : null),
@@ -497,15 +487,12 @@ function Care({ S, D }: { S: Stats; D: AtlasData | null }) {
               />
             </AtlasMap>
           </div>
-          <RampLegend
-            lo={`${meta.min} min`}
-            hi={rasterHi(meta)}
-            stops={S.rasters.ramps[meta.ramp]}
+          <ColorKey
+            {...rasterKey(S, k === 'care' ? 'walk_care' : 'walk_bus', k === 'care' ? 'Walking time to the nearest care home' : 'Walking time to the nearest bus stop')}
             extra={
-              <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 10, height: 10, borderRadius: '50%', background: k === 'care' ? '#6E2408' : '#15181D' }} />
-                {k === 'care' ? `${S.care.care_homes_osm} care homes` : `${fmt(A.bus_stops)} bus stops`}
-              </span>
+              <KeyItem swatch={<Dot color={k === 'care' ? '#6E2408' : '#15181D'} size={k === 'care' ? 10 : 6} ring={k === 'care'} />}>
+                {k === 'care' ? `Care home (${S.care.care_homes_osm})` : `Bus stop (${fmt(A.bus_stops)})`}
+              </KeyItem>
             }
           />
         </div>
