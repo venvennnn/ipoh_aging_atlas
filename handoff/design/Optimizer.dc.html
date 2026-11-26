@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ipoh Ageing Atlas — Find the best sites</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#1C5CAB}a:hover{color:#0D366B}
+</style>
+</helmet>
+<div style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #15181D; background: #FFFFFF; min-height: 100vh">
+
+<header style="border-bottom: 1px solid #E6E4DD; background: #FFFFFF">
+<nav aria-label="Main" style="max-width: 1376px; margin: 0 auto; padding: 0 32px; min-height: 64px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #15181D">
+<span style="font-weight: 800; font-size: 19px">Ipoh Ageing Atlas</span>
+</a>
+<div style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px; font-weight: 500">
+<a href="Main.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Overview</a>
+<a href="PlaceFacility.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Place a facility</a>
+<a href="Optimizer.dc.html" style="padding: 12px 14px; color: #15181D; text-decoration: none; border-bottom: 2px solid #1C5CAB">Find best sites</a>
+<a href="IndexExplorer.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Vulnerability index</a>
+</div>
+</nav>
+</header>
+
+<main style="max-width: 1376px; margin: 0 auto; padding: 32px">
+<h1 style="margin: 0; font-weight: 800; font-size: 36px; letter-spacing: -0.01em">Where is the best place to build?</h1>
+<p style="margin: 8px 0 24px; font-size: 16px; color: #44443F">Choose what to build and how many. The optimiser tests all 841 hexagon centres against 19,954 real population cells and adds the best sites one at a time.</p>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+<aside aria-label="Optimiser settings" style="flex: 1 1 300px; max-width: 340px; min-width: 0; border: 1px solid #E6E4DD; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 20px">
+<div>
+<h2 style="margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">What to build</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px">
+<sc-for list="{{ types }}" as="t" hint-placeholder-count="4"><button type="button" onClick="{{ t.pick }}" aria-pressed="{{ t.pressed }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+</div>
+</div>
+<div>
+<h2 style="margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">How many</h2>
+<div style="display: flex; align-items: center; gap: 10px">
+<button type="button" onClick="{{ dec }}" aria-label="One fewer" style="width: 48px; height: 48px; border: 1px solid #C9C6BC; background: #FFFFFF; border-radius: 8px; font: inherit; font-size: 22px; cursor: pointer; color: #15181D">−</button>
+<output aria-live="polite" style="flex: 1 1 auto; text-align: center; font-weight: 800; font-size: 40px">{{ n }}</output>
+<button type="button" onClick="{{ inc }}" aria-label="One more" style="width: 48px; height: 48px; border: 1px solid #C9C6BC; background: #FFFFFF; border-radius: 8px; font: inherit; font-size: 22px; cursor: pointer; color: #15181D">+</button>
+</div>
+<div style="display: flex; gap: 6px; margin-top: 10px">
+<sc-for list="{{ presets }}" as="p" hint-placeholder-count="5"><button type="button" onClick="{{ p.pick }}" style="{{ p.style }}">{{ p.label }}</button></sc-for>
+</div>
+</div>
+<div>
+<h2 style="margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">Goal</h2>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<sc-for list="{{ goals }}" as="g" hint-placeholder-count="3"><button type="button" onClick="{{ g.pick }}" aria-pressed="{{ g.pressed }}" style="{{ g.style }}"><span style="font-weight: 700; font-size: 14px">{{ g.label }}</span><span style="font-size: 12px; color: #5A5A55; line-height: 1.4">{{ g.desc }}</span></button></sc-for>
+</div>
+</div>
+<div>
+<h2 style="margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">Within reach means</h2>
+<sc-if value="{{ hasModes }}" hint-placeholder-val="{{ true }}">
+<div role="group" aria-label="Travel mode" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #F3F2EE; border-radius: 8px; margin-bottom: 10px">
+<sc-for list="{{ modes }}" as="m" hint-placeholder-count="2"><button type="button" onClick="{{ m.pick }}" aria-pressed="{{ m.pressed }}" style="{{ m.style }}">{{ m.label }}</button></sc-for>
+</div>
+</sc-if>
+<div role="group" aria-label="Threshold" style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{ thresholds }}" as="h" hint-placeholder-count="3"><button type="button" onClick="{{ h.pick }}" aria-pressed="{{ h.pressed }}" style="{{ h.style }}">{{ h.label }}</button></sc-for>
+</div>
+</div>
+<div>
+<label for="dun" style="display: block; font-size: 14px; font-weight: 700; margin-bottom: 6px">Only build inside</label>
+<select id="dun" onChange="{{ pickDun }}" style="width: 100%; min-height: 44px; padding: 0 10px; border: 1px solid #C9C6BC; border-radius: 8px; font: inherit; font-size: 14px; background: #FFFFFF; color: #15181D">
+<sc-for list="{{ dunOpts }}" as="d" hint-placeholder-count="14"><option value="{{ d.v }}" selected="{{ d.sel }}">{{ d.label }}</option></sc-for>
+</select>
+</div>
+<button type="button" onClick="{{ run }}" disabled="{{ busy }}" style="{{ runStyle }}">{{ runLabel }}</button>
+</aside>
+
+<div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+<section aria-label="Recommended sites map" style="flex: 999 1 420px; min-width: 0; border: 1px solid #E6E4DD; border-radius: 14px; padding: 14px">
+<p style="margin: 2px 4px 10px; font-size: 14px; font-weight: 700">{{ mapTitle }}</p>
+<div style="position: relative">
+<svg viewBox="0 0 740 800" role="img" aria-label="Map of Ipoh with the recommended sites numbered" style="width: 100%; height: auto; display: block">
+<sc-for list="{{ hexes }}" as="h" hint-placeholder-count="0"><path d="{{ h.d }}" fill="{{ h.fill }}" stroke="#FFFFFF" stroke-width="0.6"></path></sc-for>
+<path d="{{ boundary }}" fill="none" stroke="#15181D" stroke-width="1.6"></path>
+<sc-for list="{{ existing }}" as="p" hint-placeholder-count="0"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}" fill="#15181D" stroke="#FFFFFF" stroke-width="{{ p.sw }}"></circle></sc-for>
+<sc-for list="{{ pins }}" as="p" hint-placeholder-count="0">
+<circle cx="{{ p.x }}" cy="{{ p.y }}" r="14" fill="#B9461A" stroke="#FFFFFF" stroke-width="3"></circle>
+<text x="{{ p.x }}" y="{{ p.ty }}" text-anchor="middle" font-size="13" font-weight="800" fill="#FFFFFF">{{ p.n }}</text>
+</sc-for>
+</svg>
+<sc-if value="{{ overlay }}" hint-placeholder-val="{{ false }}"><div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #15181D; background: rgba(255,255,255,0.7)">{{ overlayText }}</div></sc-if>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; font-size: 12px; color: #44443F">
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; background: #F8B48C; border-radius: 2px"></span>Residents 65+</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; background: #1C5CAB; border-radius: 2px"></span>Newly in reach</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #15181D"></span>Existing</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 50%; background: #B9461A"></span>Recommended</span>
+</div>
+</section>
+
+<section aria-label="Coverage as you add sites" style="flex: 1 1 300px; min-width: 0; border: 1px solid #E6E4DD; border-radius: 14px; padding: 18px">
+<h2 style="margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">Coverage as you add sites</h2>
+<p style="margin: 4px 0 12px; font-size: 13px; color: #5A5A55">{{ curveSub }}</p>
+<svg viewBox="0 0 320 240" role="img" aria-label="Share of residents 65+ within reach after each added site" style="width: 100%; height: auto; display: block">
+<sc-for list="{{ cy }}" as="t" hint-placeholder-count="5"><line x1="36" x2="312" y1="{{ t.y }}" y2="{{ t.y }}" stroke="#EEECE6"></line><text x="30" y="{{ t.ty }}" text-anchor="end" font-size="10" fill="#5A5A55">{{ t.label }}</text></sc-for>
+<sc-for list="{{ cbars }}" as="b" hint-placeholder-count="0"><rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" fill="{{ b.fill }}" rx="2"><title>{{ b.tip }}</title></rect></sc-for>
+<sc-for list="{{ cx }}" as="t" hint-placeholder-count="0"><text x="{{ t.x }}" y="232" text-anchor="middle" font-size="10" fill="#5A5A55">{{ t.label }}</text></sc-for>
+</svg>
+<p style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: #44443F">{{ curveNote }}</p>
+</section>
+</div>
+
+<section aria-label="Recommended sites" style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 18px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 10px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Recommended sites, in build order</h2>
+<span style="font-size: 13px; color: #5A5A55">{{ summary }}</span>
+</div>
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 700px; border-collapse: collapse; font-size: 14px">
+<thead><tr style="text-align: left; color: #5A5A55; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em">
+<th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #DAD8D0; width: 36px">#</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #DAD8D0">Constituency</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #DAD8D0">Nearest existing</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #DAD8D0; text-align: right">Residents 65+ added</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #DAD8D0; text-align: right">Coverage after</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #DAD8D0; text-align: right">Average after</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #DAD8D0; text-align: right">Lat, lon</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="0">
+<tr>
+<td style="padding: 11px 8px; border-bottom: 1px solid #F0EEE8; font-weight: 800; color: #B9461A">{{ r.n }}</td>
+<td style="padding: 11px 8px; border-bottom: 1px solid #F0EEE8">{{ r.dun }}</td>
+<td style="padding: 11px 8px; border-bottom: 1px solid #F0EEE8; color: #44443F">{{ r.near }}</td>
+<td style="padding: 11px 8px; border-bottom: 1px solid #F0EEE8; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{ r.gain }}</td>
+<td style="padding: 11px 8px; border-bottom: 1px solid #F0EEE8; text-align: right; font-variant-numeric: tabular-nums">{{ r.cov }}</td>
+<td style="padding: 11px 8px; border-bottom: 1px solid #F0EEE8; text-align: right; font-variant-numeric: tabular-nums">{{ r.avg }}</td>
+<td style="padding: 11px 8px; border-bottom: 1px solid #F0EEE8; text-align: right; font-variant-numeric: tabular-nums; color: #5A5A55">{{ r.ll }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<sc-if value="{{ noRows }}" hint-placeholder-val="{{ true }}"><p style="margin: 14px 0 0; font-size: 14px; color: #5A5A55">{{ emptyText }}</p></sc-if>
+</section>
+
+<section style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 18px">
+<h2 style="margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">How it works, and how it checks out</h2>
+<p style="margin: 0; font-size: 13px; line-height: 1.6; color: #2C2C29">Demand is 19,954 cells of 100 m built from Meta's 30 m population layer, scaled to the notebook's 2026 totals, with Census 2020 shares aged 65+. Each step adds the hexagon centre that helps most, keeping every existing facility. Travel time is straight-line distance times a street-detour factor fitted to the notebook's routed results. {{ checkLine }}</p>
+</section>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1340}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { data: null, type: 'clinic', mode: 'walk', thr: 1, n: 3, goal: 'cover', dun: 'all', result: null, busy: false, step: 0 };
+  }
+  componentDidMount() {
+    var self = this;
+    fetch('/_blob/ce493bda7a7bc665f0e755030a0b0250').then(function (r) { return r.json(); }).then(function (d) { self.prep(d); self.setState({ data: d }, function () { self.solve(); }); }).catch(function () {});
+  }
+  componentWillUnmount() { this._cancel = true; }
+  prep(D) {
+    var C = D.cells, n = C.lon.length, X = new Float64Array(n), Y = new Float64Array(n), W = new Float64Array(n), HX = new Int32Array(n);
+    for (var i = 0; i < n; i++) { X[i] = C.lon[i] * 110.95; Y[i] = C.lat[i] * 110.574; W[i] = C.p65[i]; HX[i] = C.hex[i]; }
+    var tot = 0; for (var j = 0; j < n; j++) tot += W[j];
+    this.E = { n: n, X: X, Y: Y, W: W, HX: HX, tot: tot, base: {} };
+    var self = this;
+    ['clinic', 'hospital', 'care', 'bus'].forEach(function (t) {
+      var F = D.fac[t].map(function (p) { return [p.lon * 110.95, p.lat * 110.574]; }), d = new Float64Array(n);
+      for (var i = 0; i < n; i++) { var m = 1e9; for (var k = 0; k < F.length; k++) { var dx = X[i] - F[k][0], dy = Y[i] - F[k][1], v = dx * dx + dy * dy; if (v < m) m = v; } d[i] = Math.sqrt(m); }
+      self.E.base[t] = d;
+    });
+  }
+  cfg() {
+    var s = this.state, D = s.data;
+    var mode = s.type === 'bus' ? 'bus' : s.mode;
+    var THR = { walk: [[15, '15 min walk'], [30, '30 min walk'], [45, '45 min walk']], drive: [[5, '5 min drive'], [10, '10 min drive'], [15, '15 min drive']], bus: [[400, '400 m walk'], [500, '500 m walk']] };
+    var list = THR[mode], ti = Math.min(s.thr, list.length - 1);
+    var cal = D ? D.calib.types[s.type] : null, SP = D ? D.calib.walk_speed_km_per_min : 0.054, ACC = D ? D.calib.drive_access_min : 2;
+    var metric = !cal ? null : mode === 'walk' ? function (d) { return d * cal.k / SP; } : mode === 'drive' ? function (d) { return ACC + d / cal.s; } : function (d) { return d * cal.k * 1000; };
+    return { mode: mode, list: list, ti: ti, thr: list[ti][0], label: list[ti][1], metric: metric, unit: mode === 'bus' ? ' m' : ' min', key: [s.type, mode, ti, s.goal, s.dun, s.n].join('|') };
+  }
+  solve() {
+    var s = this.state, D = s.data, E = this.E; if (!D || !E) return;
+    var self = this, c = this.cfg(), metric = c.metric, thr = c.thr, N = s.n;
+    var n = E.n, X = E.X, Y = E.Y, W = E.W, HX = E.HX, base = E.base[s.type];
+    var IDX = { 'Menglembu': 52, 'Manjoi': 49, 'Tebing Tinggi': 48, 'Bercham': 47, 'Hulu Kinta': 46, 'Jelapang': 46, 'Sungai Rapat': 44, 'Buntong': 38, 'Pasir Pinji': 38, 'Teja': 32, 'Canning': 25, 'Kepayang': 23, 'Simpang Pulai': 22 };
+    var wt = new Float64Array(n), cur = new Float64Array(n), curM = new Float64Array(n);
+    for (var i = 0; i < n; i++) { var h = D.hex[HX[i]]; wt[i] = s.goal === 'equity' ? W[i] * (IDX[h.dun] || 38) / 38 : W[i]; cur[i] = base[i]; curM[i] = metric(base[i]); }
+    var cand = []; D.hex.forEach(function (h, j) { if (h.pop > 0 && (s.dun === 'all' || h.dun === s.dun)) cand.push(j); });
+    var CX = cand.map(function (j) { return D.hex[j].lon * 110.95; }), CY = cand.map(function (j) { return D.hex[j].lat * 110.574; });
+    var covered = function () { var t = 0; for (var q = 0; q < n; q++) if (curM[q] <= thr) t += W[q]; return t; };
+    var avg = function () { var t = 0; for (var q = 0; q < n; q++) t += W[q] * curM[q]; return t / E.tot; };
+    var baseCov = covered(), baseAvg = avg(), picks = [], used = {}, key = c.key;
+    this._cancel = false;
+    this.setState({ busy: true, step: 0, result: null });
+    var step = function () {
+      if (self._cancel) return;
+      var best = -1, bestScore = 0;
+      for (var a = 0; a < cand.length; a++) {
+        if (used[a]) continue;
+        var ax = CX[a], ay = CY[a], sc = 0;
+        for (var q = 0; q < n; q++) {
+          var dx = X[q] - ax, dy = Y[q] - ay, d = Math.sqrt(dx * dx + dy * dy);
+          if (d >= cur[q]) continue;
+          if (s.goal === 'median') sc += wt[q] * (curM[q] - metric(d));
+          else if (curM[q] > thr && metric(d) <= thr) sc += wt[q];
+        }
+        if (sc > bestScore) { bestScore = sc; best = a; }
+      }
+      if (best < 0) { finish(); return; }
+      used[best] = true;
+      var before = covered(), bx = CX[best], by = CY[best];
+      for (var q2 = 0; q2 < n; q2++) { var dx2 = X[q2] - bx, dy2 = Y[q2] - by, d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2); if (d2 < cur[q2]) { cur[q2] = d2; curM[q2] = metric(d2); } }
+      var after = covered(), hj = cand[best];
+      var nearD = 1e9, nearN = ''; D.fac[s.type].forEach(function (f) { var dx3 = (f.lon - D.hex[hj].lon) * 110.95, dy3 = (f.lat - D.hex[hj].lat) * 110.574, d3 = Math.sqrt(dx3 * dx3 + dy3 * dy3); if (d3 < nearD) { nearD = d3; nearN = f.n; } });
+      picks.push({ hex: hj, gain: after - before, cov: after / E.tot * 100, avg: avg(), nearN: nearN, nearD: nearD });
+      if (picks.length < N) { self.setState({ step: picks.length }); setTimeout(step, 0); } else finish();
+    };
+    var finish = function () {
+      var hexNew = new Float64Array(D.hex.length);
+      for (var q = 0; q < n; q++) if (curM[q] <= thr && metric(base[q]) > thr) hexNew[HX[q]] += W[q];
+      self.setState({ busy: false, result: { key: key, picks: picks, baseCov: baseCov / E.tot * 100, finalCov: covered() / E.tot * 100, added: covered() - baseCov, baseAvg: baseAvg, finalAvg: avg(), hexNew: hexNew } });
+    };
+    setTimeout(step, 30);
+  }
+  renderVals() {
+    var self = this, s = this.state, D = s.data, res = s.result, c = this.cfg();
+    var fmt = function (v) { return Math.round(v).toLocaleString('en-US'); };
+    var TYPES = [['clinic', 'Public clinic'], ['hospital', 'Hospital'], ['care', 'Care home'], ['bus', 'Bus stop']];
+    var tname = TYPES.filter(function (t) { return t[0] === s.type; })[0][1];
+    var pill = function (on) { return 'min-height: 40px; padding: 0 12px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid ' + (on ? '#15181D' : '#DAD8D0') + '; background: ' + (on ? '#15181D' : '#FFFFFF') + '; color: ' + (on ? '#FFFFFF' : '#15181D'); };
+    var types = TYPES.map(function (t) {
+      var on = t[0] === s.type;
+      return { label: t[1], pressed: on ? 'true' : 'false', pick: function () { self.setState({ type: t[0], thr: 1 }); },
+        style: 'min-height: 44px; padding: 0 10px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; border: 1px solid ' + (on ? '#1C5CAB' : '#C9C6BC') + '; background: ' + (on ? '#1C5CAB' : '#FFFFFF') + '; color: ' + (on ? '#FFFFFF' : '#15181D') };
+    });
+    var setN = function (v) { self.setState({ n: Math.max(1, Math.min(20, v)) }); };
+    var presets = [1, 2, 3, 5, 10].map(function (v) { var on = v === s.n; return { label: String(v), pick: function () { setN(v); }, style: 'flex: 1 1 0; min-height: 40px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; border: 1px solid ' + (on ? '#15181D' : '#E6E4DD') + '; background: ' + (on ? '#15181D' : '#F6F5F1') + '; color: ' + (on ? '#FFFFFF' : '#15181D') }; });
+    var GOALS = [['cover', 'Reach the most people', 'Most residents 65+ newly within the travel time.'], ['median', 'Shortest average trip', 'Biggest cut in average travel time for residents 65+.'], ['equity', 'Worst-off first', 'Residents in high-index constituencies count for more.']];
+    var goals = GOALS.map(function (g) { var on = g[0] === s.goal; return { label: g[1], desc: g[2], pressed: on ? 'true' : 'false', pick: function () { self.setState({ goal: g[0] }); }, style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; min-height: 44px; padding: 10px 12px; border-radius: 8px; font: inherit; cursor: pointer; color: #15181D; border: 1px solid ' + (on ? '#1C5CAB' : '#E6E4DD') + '; background: ' + (on ? '#EEF4FC' : '#FFFFFF') }; });
+    var modes = [['walk', 'Walking'], ['drive', 'Driving']].map(function (m) { var on = m[0] === c.mode; return { label: m[1], pressed: on ? 'true' : 'false', pick: function () { self.setState({ mode: m[0] }); }, style: 'min-height: 40px; border: 0; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; background: ' + (on ? '#FFFFFF' : 'transparent') + '; color: #15181D' + (on ? '; box-shadow: 0 1px 2px rgba(0,0,0,0.12)' : '') }; });
+    var thresholds = c.list.map(function (x, i) { return { label: x[1], pressed: i === c.ti ? 'true' : 'false', style: pill(i === c.ti), pick: function () { self.setState({ thr: i }); } }; });
+    var DUNS = ['Bercham', 'Buntong', 'Canning', 'Hulu Kinta', 'Jelapang', 'Kepayang', 'Manjoi', 'Menglembu', 'Pasir Pinji', 'Simpang Pulai', 'Sungai Rapat', 'Tebing Tinggi', 'Teja'];
+    var dunOpts = [{ v: 'all', label: 'All of Ipoh', sel: s.dun === 'all' }].concat(DUNS.map(function (d) { return { v: d, label: d, sel: s.dun === d }; }));
+    var fresh = res && res.key === c.key;
+    var hex2 = function (h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; };
+    var ramp = function (stops, x) { x = Math.max(0, Math.min(1, x)); var m = stops.length - 1, i = Math.min(m - 1, Math.floor(x * m)), f = x * m - i, a = hex2(stops[i]), b = hex2(stops[i + 1]); return 'rgb(' + [0, 1, 2].map(function (k) { return Math.round(a[k] + (b[k] - a[k]) * f); }).join(',') + ')'; };
+    var OR = ['#FBF3EC', '#FDE0CC', '#F8B48C', '#D9773F'], NEW = ['#CDE2FB', '#86B6EF', '#1C5CAB', '#0D366B'];
+    var hexes = D ? D.hex.map(function (h, j) { var nv = res ? res.hexNew[j] : 0; return { d: h.d, fill: nv > 0 ? ramp(NEW, Math.sqrt(nv / 200)) : ramp(OR, Math.sqrt(h.p65 / 320)) }; }) : [];
+    var inFrame = function (p) { return p.x >= 0 && p.x <= 740 && p.y >= 0 && p.y <= 800; };
+    var existing = D ? D.fac[s.type].filter(inFrame).map(function (p) { return s.type === 'bus' ? { x: p.x, y: p.y, r: 2.4, sw: 0.6 } : { x: p.x, y: p.y, r: 6, sw: 2 }; }) : [];
+    var pins = (D && res) ? res.picks.map(function (p, k) { var h = D.hex[p.hex]; return { x: h.x, y: h.y, ty: h.y + 4.5, n: String(k + 1) }; }) : [];
+    var dec = c.mode === 'bus' ? 0 : 1;
+    var rows = (D && res) ? res.picks.map(function (p, k) { var h = D.hex[p.hex]; return { n: String(k + 1), dun: h.dun || h.area, near: p.nearN + ' · ' + p.nearD.toFixed(1) + ' km away', gain: '+' + fmt(p.gain), cov: p.cov.toFixed(1) + '%', avg: p.avg.toFixed(dec) + c.unit, ll: h.lat.toFixed(4) + ', ' + h.lon.toFixed(4) }; }) : [];
+    var cbars = [], cxT = [];
+    if (res) {
+      var vals = [res.baseCov].concat(res.picks.map(function (p) { return p.cov; })), nB = vals.length, bw = 276 / nB;
+      vals.forEach(function (v, k) { var hh = v / 100 * 200; cbars.push({ x: (36 + k * bw + bw * 0.15).toFixed(1), y: (210 - hh).toFixed(1), w: (bw * 0.7).toFixed(1), h: hh.toFixed(1), fill: k === 0 ? '#A8A59B' : '#1C5CAB', tip: (k === 0 ? 'Today' : 'After site ' + k) + ': ' + v.toFixed(1) + '%' }); if (k === 0 || nB <= 11 || k % 5 === 0) cxT.push({ x: (36 + k * bw + bw / 2).toFixed(1), label: k === 0 ? 'now' : String(k) }); });
+    }
+    var chk = D ? D.calib.check[s.type] : null, ck = c.mode === 'bus' ? 'walk' : c.mode;
+    var mv = chk && chk[ck] ? chk[ck][c.ti] : null, rv = chk && chk[ck + '_routed'] ? chk[ck + '_routed'][c.ti] : null;
+    return {
+      types: types, presets: presets, goals: goals, modes: modes, thresholds: thresholds, hasModes: s.type !== 'bus', dunOpts: dunOpts, n: s.n,
+      dec: function () { setN(s.n - 1); }, inc: function () { setN(s.n + 1); },
+      pickDun: function (e) { self.setState({ dun: e.target.value }); },
+      run: function () { if (!s.busy) self.solve(); }, busy: s.busy || !D,
+      runLabel: !D ? 'Loading data…' : s.busy ? 'Finding site ' + (s.step + 1) + ' of ' + s.n + '…' : fresh ? 'Up to date' : 'Find the best ' + s.n + ' site' + (s.n > 1 ? 's' : ''),
+      runStyle: 'min-height: 52px; border: 0; border-radius: 8px; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; color: #FFFFFF; background: ' + (s.busy || !D ? '#5A7FAE' : '#1C5CAB'),
+      overlay: !D || s.busy, overlayText: !D ? 'Loading 19,954 population cells…' : 'Testing ' + (s.dun === 'all' ? 841 : 'all') + ' candidate sites · site ' + (s.step + 1) + ' of ' + s.n,
+      hexes: hexes, existing: existing, pins: pins, boundary: D ? D.boundary : '', rows: rows, noRows: rows.length === 0,
+      emptyText: s.busy ? 'Running…' : 'Press “Find” to run the optimiser.',
+      mapTitle: res ? 'Best ' + res.picks.length + ' new ' + tname.toLowerCase() + (res.picks.length > 1 ? 's' : '') + (fresh ? '' : ' · settings changed, press Find') : tname,
+      curveSub: tname + ' · residents 65+ within ' + c.label,
+      cy: [0, 25, 50, 75, 100].map(function (v) { var y = 210 - v * 2; return { y: y, ty: y + 3, label: v + '%' }; }),
+      cbars: cbars, cx: cxT,
+      curveNote: res ? 'From ' + res.baseCov.toFixed(1) + '% today to ' + res.finalCov.toFixed(1) + '%.' : '',
+      summary: res ? '+' + fmt(res.added) + ' residents 65+ within ' + c.label + ' · average ' + res.baseAvg.toFixed(dec) + c.unit + ' → ' + res.finalAvg.toFixed(dec) + c.unit : '',
+      checkLine: rv != null ? 'Check for this setting: the model puts ' + mv.toFixed(1) + '% of residents 65+ within ' + c.label + ' today; the notebook’s street routing gives ' + rv.toFixed(1) + '%.' : (s.type === 'care' ? 'Care homes have no routed curve in the notebook, so they use the average clinic and hospital fit; treat care-home results as indicative.' : '')
+    };
+  }
+}
+</script>
+</body>
+</html>

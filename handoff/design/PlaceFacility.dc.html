@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ipoh Ageing Atlas — Place a facility</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#1C5CAB}a:hover{color:#0D366B}
+</style>
+</helmet>
+<div style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #15181D; background: #FFFFFF; min-height: 100vh">
+
+<header style="border-bottom: 1px solid #E6E4DD; background: #FFFFFF">
+<nav aria-label="Main" style="max-width: 1376px; margin: 0 auto; padding: 0 32px; min-height: 64px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #15181D">
+<span style="font-weight: 800; font-size: 19px">Ipoh Ageing Atlas</span>
+</a>
+<div style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px; font-weight: 500">
+<a href="Main.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Overview</a>
+<a href="PlaceFacility.dc.html" style="padding: 12px 14px; color: #15181D; text-decoration: none; border-bottom: 2px solid #1C5CAB">Place a facility</a>
+<a href="Optimizer.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Find best sites</a>
+<a href="IndexExplorer.dc.html" style="padding: 12px 14px; color: #44443F; text-decoration: none">Vulnerability index</a>
+</div>
+</nav>
+</header>
+
+<main style="max-width: 1376px; margin: 0 auto; padding: 32px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px">
+<div>
+<h1 style="margin: 0; font-weight: 800; font-size: 36px; letter-spacing: -0.01em">What if we build here?</h1>
+<p style="margin: 8px 0 0; font-size: 16px; color: #44443F">Pick a facility, then click anywhere on the map to add it. Results recalculate on 19,954 real population cells.</p>
+</div>
+<button type="button" onClick="{{ clearAll }}" style="min-height: 44px; padding: 0 16px; border: 1px solid #C9C6BC; background: #FFFFFF; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 600; color: #15181D; cursor: pointer">Clear my facilities</button>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+
+<aside aria-label="Simulation settings" style="flex: 1 1 280px; max-width: 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<section style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 18px">
+<h2 style="margin: 0 0 12px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">1 · Facility</h2>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<sc-for list="{{ types }}" as="t" hint-placeholder-count="4">
+<button type="button" onClick="{{ t.pick }}" aria-pressed="{{ t.pressed }}" style="{{ t.style }}">
+<span style="{{ t.dot }}"></span><span style="flex: 1 1 auto; text-align: left">{{ t.label }}</span><span style="font-size: 12px; font-weight: 500; color: #5A5A55">{{ t.count }}</span>
+</button>
+</sc-for>
+</div>
+<p style="margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: #5A5A55">Senior activity centres can be added once JKM's PAWE list loads.</p>
+</section>
+
+<section style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 18px">
+<h2 style="margin: 0 0 12px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">2 · Counts as within reach</h2>
+<sc-if value="{{ hasModes }}" hint-placeholder-val="{{ true }}">
+<div role="group" aria-label="Travel mode" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #F3F2EE; border-radius: 8px; margin-bottom: 10px">
+<sc-for list="{{ modes }}" as="m" hint-placeholder-count="2"><button type="button" onClick="{{ m.pick }}" aria-pressed="{{ m.pressed }}" style="{{ m.style }}">{{ m.label }}</button></sc-for>
+</div>
+</sc-if>
+<div role="group" aria-label="Threshold" style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{ thresholds }}" as="h" hint-placeholder-count="3"><button type="button" onClick="{{ h.pick }}" aria-pressed="{{ h.pressed }}" style="{{ h.style }}">{{ h.label }}</button></sc-for>
+</div>
+</section>
+
+<section style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 18px">
+<h2 style="margin: 0 0 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">Your facilities</h2>
+<sc-if value="{{ noneYet }}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 13px; color: #5A5A55">None yet. Click the map.</p></sc-if>
+<sc-for list="{{ placedList }}" as="p" hint-placeholder-count="0">
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F0EEE8; font-size: 13px">
+<span style="{{ p.dot }}">{{ p.n }}</span>
+<span style="flex: 1 1 auto; min-width: 0"><strong>{{ p.gain }}</strong> residents 65+ newly in reach<br><span style="color: #5A5A55">{{ p.where }}</span></span>
+<button type="button" onClick="{{ p.remove }}" aria-label="Remove" style="width: 36px; height: 36px; border: 1px solid #E6E4DD; background: #FFFFFF; border-radius: 8px; cursor: pointer; font: inherit; color: #44443F">×</button>
+</div>
+</sc-for>
+</section>
+</aside>
+
+<section aria-label="Map" style="flex: 999 1 480px; min-width: 0; border: 1px solid #E6E4DD; border-radius: 14px; padding: 14px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding: 2px 4px 10px">
+<p style="margin: 0; font-size: 14px; font-weight: 600">Adding: <span style="{{ placingStyle }}">{{ placingLabel }}</span> · click to place</p>
+<div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #44443F">
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; background: #F8B48C; border-radius: 2px"></span>Residents 65+</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; background: #1C5CAB; border-radius: 2px"></span>Newly in reach</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #15181D"></span>Existing</span>
+</div>
+</div>
+<div style="position: relative">
+<svg viewBox="0 0 740 800" role="img" aria-label="Map of Ipoh. Click anywhere to add the selected facility." onClick="{{ mapClick }}" style="width: 100%; height: auto; display: block; cursor: crosshair">
+<rect x="0" y="0" width="740" height="800" fill="#FFFFFF"></rect>
+<sc-for list="{{ hexes }}" as="h" hint-placeholder-count="0"><path d="{{ h.d }}" fill="{{ h.fill }}" stroke="#FFFFFF" stroke-width="0.6" onMouseEnter="{{ h.hover }}"></path></sc-for>
+<path d="{{ boundary }}" fill="none" stroke="#15181D" stroke-width="1.6" pointer-events="none"></path>
+<sc-for list="{{ existing }}" as="p" hint-placeholder-count="0"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}" fill="#15181D" stroke="#FFFFFF" stroke-width="{{ p.sw }}" pointer-events="none"></circle></sc-for>
+<sc-for list="{{ pins }}" as="p" hint-placeholder-count="0">
+<circle cx="{{ p.x }}" cy="{{ p.y }}" r="13" fill="{{ p.color }}" stroke="#FFFFFF" stroke-width="3" pointer-events="none"></circle>
+<text x="{{ p.x }}" y="{{ p.ty }}" text-anchor="middle" font-size="12" font-weight="800" fill="#FFFFFF" pointer-events="none">{{ p.n }}</text>
+</sc-for>
+</svg>
+<div style="position: absolute; top: 8px; left: 8px; max-width: 250px; background: rgba(255,255,255,0.95); border: 1px solid #E6E4DD; border-radius: 8px; padding: 10px 12px; font-size: 12px; line-height: 1.5; pointer-events: none">
+<p style="margin: 0; font-weight: 700; font-size: 13px">{{ hover.title }}</p>
+<p style="margin: 2px 0 0; color: #44443F; white-space: pre-line">{{ hover.body }}</p>
+</div>
+<sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}"><div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #5A5A55; background: rgba(255,255,255,0.7)">Loading 19,954 population cells…</div></sc-if>
+</div>
+</section>
+
+<aside aria-label="Results" style="flex: 1 1 320px; max-width: 380px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<section style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 18px">
+<h2 style="margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">Residents 65+ within reach</h2>
+<p style="margin: 4px 0 14px; font-size: 13px; color: #5A5A55">{{ resultSub }}</p>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="background: #F6F5F1; border-radius: 10px; padding: 14px">
+<p style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #5A5A55">TODAY</p>
+<p style="margin: 6px 0 0; font-weight: 800; font-size: 30px">{{ r.basePct }}</p>
+<p style="margin: 2px 0 0; font-size: 13px; color: #44443F">{{ r.baseN }}</p>
+</div>
+<div style="background: #EEF4FC; border-radius: 10px; padding: 14px">
+<p style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #1C5CAB">WITH YOUR PLAN</p>
+<p style="margin: 6px 0 0; font-weight: 800; font-size: 30px; color: #0D366B">{{ r.afterPct }}</p>
+<p style="margin: 2px 0 0; font-size: 13px; color: #44443F">{{ r.afterN }}</p>
+</div>
+</div>
+<div style="margin-top: 14px; height: 14px; background: #F3F2EE; border-radius: 3px; display: flex; overflow: hidden"><div style="{{ r.barBase }}"></div><div style="{{ r.barGain }}"></div></div>
+<p style="margin: 12px 0 0; font-size: 22px; font-weight: 800; color: #0D366B">{{ r.gain }}</p>
+<p style="margin: 2px 0 0; font-size: 13px; color: #44443F">{{ r.avg }}</p>
+</section>
+
+<section style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 18px">
+<h2 style="margin: 0 0 12px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">Gains by constituency</h2>
+<sc-if value="{{ noGains }}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 13px; color: #5A5A55">Add a facility to see which DUNs gain.</p></sc-if>
+<sc-for list="{{ gains }}" as="g" hint-placeholder-count="0">
+<div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 54px; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 8px">
+<span>{{ g.dun }}</span><div style="height: 12px; background: #F3F2EE; border-radius: 2px"><div style="{{ g.bar }}"></div></div><strong style="text-align: right; font-variant-numeric: tabular-nums">{{ g.n }}</strong>
+</div>
+</sc-for>
+</section>
+
+<section style="border: 1px solid #E6E4DD; border-radius: 14px; padding: 18px">
+<h2 style="margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5A5A55">Model check against the notebook</h2>
+<p style="margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: #44443F">{{ check.text }}</p>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; font-size: 13px">
+<div style="background: #F6F5F1; border-radius: 8px; padding: 10px"><span style="color: #5A5A55">This model</span><br><strong style="font-size: 18px">{{ check.model }}</strong></div>
+<div style="background: #F6F5F1; border-radius: 8px; padding: 10px"><span style="color: #5A5A55">Notebook, routed</span><br><strong style="font-size: 18px">{{ check.routed }}</strong></div>
+</div>
+<p style="margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: #5A5A55">Distance from each 100 m cell to the nearest facility, times a street-detour factor fitted to the notebook's routed results. Population: Meta 30 m layer scaled to 2026; 65+ shares: Census 2020.</p>
+</section>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { data: null, type: 'clinic', mode: 'walk', thr: 1, placed: [], hover: null };
+  }
+  componentDidMount() {
+    var self = this;
+    fetch('/_blob/ce493bda7a7bc665f0e755030a0b0250').then(function (r) { return r.json(); }).then(function (d) { self.prep(d); self.setState({ data: d }); }).catch(function () {});
+  }
+  prep(D) {
+    var C = D.cells, n = C.lon.length, X = new Float64Array(n), Y = new Float64Array(n), W = new Float64Array(n), HX = new Int32Array(n);
+    for (var i = 0; i < n; i++) { X[i] = C.lon[i] * 110.95; Y[i] = C.lat[i] * 110.574; W[i] = C.p65[i]; HX[i] = C.hex[i]; }
+    var tot = 0; for (var j = 0; j < n; j++) tot += W[j];
+    this.E = { n: n, X: X, Y: Y, W: W, HX: HX, tot: tot, base: {} };
+    var self = this;
+    ['clinic', 'hospital', 'care', 'bus'].forEach(function (t) {
+      var F = D.fac[t].map(function (p) { return [p.lon * 110.95, p.lat * 110.574]; }), d = new Float64Array(n);
+      for (var i = 0; i < n; i++) { var m = 1e9; for (var k = 0; k < F.length; k++) { var dx = X[i] - F[k][0], dy = Y[i] - F[k][1], v = dx * dx + dy * dy; if (v < m) m = v; } d[i] = Math.sqrt(m); }
+      self.E.base[t] = d;
+    });
+  }
+  renderVals() {
+    var self = this, s = this.state, D = s.data, E = this.E;
+    var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
+    var TYPES = {
+      clinic: { label: 'Public clinic', color: '#1C5CAB', count: '19 today', modes: true },
+      hospital: { label: 'Hospital', color: '#0D366B', count: '15 today', modes: true },
+      care: { label: 'Care home', color: '#B9461A', count: '18 today', modes: true },
+      bus: { label: 'Bus stop', color: '#44443F', count: '378 today', modes: false }
+    };
+    var t = TYPES[s.type], mode = t.modes ? s.mode : 'bus';
+    var THR = { walk: [[15, '15 min walk'], [30, '30 min walk'], [45, '45 min walk']], drive: [[5, '5 min drive'], [10, '10 min drive'], [15, '15 min drive']], bus: [[400, '400 m walk'], [500, '500 m walk']] };
+    var thrList = THR[mode], ti = Math.min(s.thr, thrList.length - 1), thr = thrList[ti][0];
+    var pill = function (on) { return 'min-height: 40px; padding: 0 12px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid ' + (on ? '#15181D' : '#DAD8D0') + '; background: ' + (on ? '#15181D' : '#FFFFFF') + '; color: ' + (on ? '#FFFFFF' : '#15181D'); };
+    var types = Object.keys(TYPES).map(function (k) {
+      var on = k === s.type;
+      return { label: TYPES[k].label, count: TYPES[k].count, pressed: on ? 'true' : 'false', pick: function () { self.setState({ type: k, placed: [], thr: 1 }); },
+        dot: 'width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; background: ' + TYPES[k].color,
+        style: 'display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: ' + (on ? '700' : '500') + '; cursor: pointer; color: #15181D; background: ' + (on ? '#EEF4FC' : '#FFFFFF') + '; border: 1px solid ' + (on ? '#1C5CAB' : '#E6E4DD') };
+    });
+    var modes = [['walk', 'Walking'], ['drive', 'Driving']].map(function (m) {
+      var on = m[0] === mode;
+      return { label: m[1], pressed: on ? 'true' : 'false', pick: function () { self.setState({ mode: m[0] }); }, style: 'min-height: 40px; border: 0; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; background: ' + (on ? '#FFFFFF' : 'transparent') + '; color: #15181D' + (on ? '; box-shadow: 0 1px 2px rgba(0,0,0,0.12)' : '') };
+    });
+    var thresholds = thrList.map(function (x, i) { return { label: x[1], pressed: i === ti ? 'true' : 'false', style: pill(i === ti), pick: function () { self.setState({ thr: i }); } }; });
+    var common = {
+      types: types, modes: modes, thresholds: thresholds, hasModes: t.modes, placingLabel: t.label, placingStyle: 'color: ' + t.color,
+      resultSub: t.label + ' · ' + thrList[ti][1], clearAll: function () { self.setState({ placed: [] }); }
+    };
+    if (!D || !E) return Object.assign(common, { loading: true, hexes: [], existing: [], pins: [], boundary: '', placedList: [], noneYet: true, gains: [], noGains: true,
+      hover: { title: 'Loading', body: '' }, r: { basePct: '…', baseN: '', afterPct: '…', afterN: '', gain: '', avg: '', barBase: '', barGain: '' }, check: { text: '', model: '', routed: '' } });
+
+    var cal = D.calib.types[s.type], SP = D.calib.walk_speed_km_per_min;
+    var metric = mode === 'walk' ? function (d) { return d * cal.k / SP; } : mode === 'drive' ? function (d) { return D.calib.drive_access_min + d / cal.s; } : function (d) { return d * cal.k * 1000; };
+    var unit = mode === 'bus' ? ' m' : ' min';
+    var base = E.base[s.type], n = E.n, X = E.X, Y = E.Y, W = E.W, HX = E.HX;
+    var P = s.placed.map(function (p) { return [p.lon * 110.95, p.lat * 110.574]; });
+    var baseIn = 0, afterIn = 0, sumB = 0, sumA = 0, hexNew = new Float64Array(D.hex.length), perSite = P.map(function () { return 0; });
+    for (var i = 0; i < n; i++) {
+      var b = base[i], a = b, who = -1;
+      for (var k = 0; k < P.length; k++) { var dx = X[i] - P[k][0], dy = Y[i] - P[k][1], d = Math.sqrt(dx * dx + dy * dy); if (d < a) { a = d; who = k; } }
+      var mb = metric(b), ma = metric(a);
+      sumB += W[i] * mb; sumA += W[i] * ma;
+      if (mb <= thr) baseIn += W[i];
+      if (ma <= thr) { afterIn += W[i]; if (mb > thr) { hexNew[HX[i]] += W[i]; if (who >= 0) perSite[who] += W[i]; } }
+    }
+    var tot = E.tot, gainsBy = {};
+    D.hex.forEach(function (h, j) { if (hexNew[j] > 0) { var dn = h.dun || 'Outside DUNs'; gainsBy[dn] = (gainsBy[dn] || 0) + hexNew[j]; } });
+    var hex2 = function (h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; };
+    var ramp = function (stops, x) { x = Math.max(0, Math.min(1, x)); var m = stops.length - 1, i2 = Math.min(m - 1, Math.floor(x * m)), f = x * m - i2, a2 = hex2(stops[i2]), b2 = hex2(stops[i2 + 1]); return 'rgb(' + [0, 1, 2].map(function (q) { return Math.round(a2[q] + (b2[q] - a2[q]) * f); }).join(',') + ')'; };
+    var OR = ['#FBF3EC', '#FDE0CC', '#F8B48C', '#D9773F'], NEW = ['#CDE2FB', '#86B6EF', '#1C5CAB', '#0D366B'];
+    var hexes = D.hex.map(function (h, j) {
+      return { d: h.d, fill: hexNew[j] > 0 ? ramp(NEW, Math.sqrt(hexNew[j] / 200)) : ramp(OR, Math.sqrt(h.p65 / 320)), hover: function () { self.setState({ hover: j }); } };
+    });
+    var inFrame = function (p) { return p.x >= 0 && p.x <= 740 && p.y >= 0 && p.y <= 800; };
+    var existing = D.fac[s.type].filter(inFrame).map(function (p) { return s.type === 'bus' ? { x: p.x, y: p.y, r: 2.4, sw: 0.6 } : { x: p.x, y: p.y, r: 6, sw: 2 }; });
+    var pins = s.placed.map(function (p, i3) { return { x: p.x.toFixed(1), y: p.y.toFixed(1), ty: (p.y + 4).toFixed(1), n: String(i3 + 1), color: t.color }; });
+    var placedList = s.placed.map(function (p, i3) {
+      return { n: String(i3 + 1), gain: '+' + fmt(perSite[i3]), where: p.lat.toFixed(4) + ', ' + p.lon.toFixed(4),
+        dot: 'flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #FFFFFF; background: ' + t.color,
+        remove: function () { self.setState({ placed: s.placed.filter(function (_, q) { return q !== i3; }) }); } };
+    });
+    var gl = Object.keys(gainsBy).map(function (k2) { return [k2, gainsBy[k2]]; }).sort(function (a3, b3) { return b3[1] - a3[1]; }).slice(0, 6);
+    var gmax = gl.length ? gl[0][1] : 1;
+    var hv = s.hover != null ? D.hex[s.hover] : null;
+    var chk = D.calib.check[s.type], ckey = mode === 'bus' ? 'walk' : mode;
+    var model = chk[ckey] ? chk[ckey][ti] : null, routed = chk[ckey + '_routed'] ? chk[ckey + '_routed'][ti] : null;
+    var gain = afterIn - baseIn;
+    return Object.assign(common, {
+      loading: false, hexes: hexes, existing: existing, pins: pins, boundary: D.boundary,
+      mapClick: function (e) {
+        var r = e.currentTarget.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 740, y = (e.clientY - r.top) / r.height * 800;
+        var lon = 101.0 + x / 740 * 0.26, lat = 4.79 - y / 800 * 0.28;
+        self.setState({ placed: s.placed.concat([{ x: x, y: y, lon: lon, lat: lat }]) });
+      },
+      hover: hv ? { title: hv.dun || hv.area, body: fmt(hv.p65) + ' residents 65+ · ' + fmt(hv.pop) + ' people' + (hexNew[s.hover] > 0 ? '\n+' + fmt(hexNew[s.hover]) + ' newly in reach' : '') } : { title: 'Click anywhere to add a ' + t.label.toLowerCase(), body: 'Click a placed site’s × in the list to remove it.' },
+      placedList: placedList, noneYet: placedList.length === 0,
+      gains: gl.map(function (g) { return { dun: g[0], n: '+' + fmt(g[1]), bar: 'height: 100%; border-radius: 2px; background: #1C5CAB; width: ' + (g[1] / gmax * 100).toFixed(1) + '%' }; }), noGains: gl.length === 0,
+      r: {
+        basePct: (baseIn / tot * 100).toFixed(1) + '%', baseN: fmt(baseIn) + ' people',
+        afterPct: (afterIn / tot * 100).toFixed(1) + '%', afterN: fmt(afterIn) + ' people',
+        gain: s.placed.length ? '+' + fmt(gain) + ' residents 65+' : 'Click the map to add one',
+        avg: 'Average for residents 65+: ' + (sumB / tot).toFixed(mode === 'bus' ? 0 : 1) + unit + ' today' + (s.placed.length ? ' → ' + (sumA / tot).toFixed(mode === 'bus' ? 0 : 1) + unit : ''),
+        barBase: 'height: 100%; background: #86B6EF; width: ' + (baseIn / tot * 100).toFixed(2) + '%',
+        barGain: 'height: 100%; background: #0D366B; width: ' + (gain / tot * 100).toFixed(2) + '%'
+      },
+      check: {
+        text: routed != null ? 'Today’s share from this model, next to the notebook’s street-routed figure for the same threshold.' : 'Care homes have no routed curve in the notebook, so this uses the average detour of the clinic and hospital fits. Treat care-home results as indicative.',
+        model: model != null ? model.toFixed(1) + '%' : '—', routed: routed != null ? routed.toFixed(1) + '%' : 'not printed'
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>

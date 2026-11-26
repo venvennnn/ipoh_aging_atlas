@@ -1,0 +1,112 @@
+{
+ "dataset": "ipoh_v2",
+ "asset": "/_blob/ce493bda7a7bc665f0e755030a0b0250",
+ "built": "2026-11-26",
+ "cells": 19954,
+ "cell_size_m": 100,
+ "residents": 772482,
+ "residents_65plus": 74216,
+ "hexagons": 841,
+ "facilities": {
+  "clinic": 19,
+  "hospital": 15,
+  "care": 18,
+  "bus": 378
+ },
+ "sources": {
+  "population": "Meta High Resolution Population Density, Malaysia general 2020 (30 m), 127,465 pixels inside the Majlis Bandaraya Ipoh boundary, scaled per hexagon to the notebook’s 2026 totals",
+  "p65": "DOSM Census 2020 share aged 65+ per census area (Bandar areas estimated as in the notebook)",
+  "facilities": "OpenStreetMap + Healthsites.io + KKM list (notebook Part 2, 4, 6)"
+ },
+ "calibration": {
+  "walk_speed_km_per_min": 0.054,
+  "drive_access_min": 2,
+  "types": {
+   "clinic": {
+    "k": 1.48,
+    "s": 0.34
+   },
+   "hospital": {
+    "k": 1.6,
+    "s": 0.405
+   },
+   "care": {
+    "k": 1.54,
+    "s": 0.3725
+   },
+   "bus": {
+    "k": 1.98,
+    "s": null
+   }
+  },
+  "check": {
+   "clinic": {
+    "walk": [
+     7.9,
+     27.2,
+     50.5
+    ],
+    "drive": [
+     24.2,
+     79.1,
+     96.6
+    ],
+    "walk_routed": [
+     5.8,
+     27.2,
+     53.2
+    ],
+    "drive_routed": [
+     21.4,
+     83.9,
+     98.0
+    ]
+   },
+   "hospital": {
+    "walk": [
+     5.1,
+     14.4,
+     23.6
+    ],
+    "drive": [
+     17.9,
+     58.0,
+     87.2
+    ],
+    "walk_routed": [
+     5.1,
+     11.2,
+     24.4
+    ],
+    "drive_routed": [
+     7.2,
+     54.0,
+     92.4
+    ]
+   },
+   "care": {
+    "walk": [
+     5.4,
+     17.2,
+     30.1
+    ],
+    "drive": [
+     18.8,
+     55.2,
+     72.8
+    ]
+   },
+   "bus": {
+    "walk": [
+     16.5,
+     23.0
+    ],
+    "walk_routed": [
+     16,
+     23
+    ]
+   }
+  },
+  "method": "Straight-line distance from each 100 m cell to the nearest facility, scaled by a street-detour factor k (walking at 0.9 m/s) or an effective straight-line driving speed s (km/min, plus 2 min access). k and s are fitted so the existing facilities reproduce the notebook’s street-routed results (curves in Part 2; bus stops: 16% within 400 m, 23% within 500 m). Care homes have no routed curve, so they use the mean of the clinic and hospital fits."
+ }
+}
