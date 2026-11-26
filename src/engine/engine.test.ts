@@ -105,3 +105,12 @@ describe('adding a site never lowers coverage', () => {
     for (const p of r.picks) expect(atlas.hex[p.hex].dun).toBe('Manjoi');
   });
 });
+
+describe('index explorer', () => {
+  it('equal weights reproduce the stored DUN index to within rounding', async () => {
+    const { weightedScore } = await import('../lib/indexScore');
+    for (const d of stats.index.dun) {
+      expect(Math.abs(weightedScore(d, [1, 1, 1, 1, 1]) - d.index)).toBeLessThan(1);
+    }
+  });
+});
