@@ -14,6 +14,7 @@ class EngineClient {
   private ready: Promise<void>;
   private nextId = 1;
   private pending = new Map<number, Pending>();
+  private cancelledEarly = new Set<number>();
 
   constructor() {
     this.worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
@@ -81,6 +82,7 @@ class EngineClient {
     const result = this.ready.then(
       () =>
         new Promise<OptimiseResult>((resolve, reject) => {
+          if (this.cancelledEarly.delete(id)) return reject(new CancelledError());
           this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject, onProgress });
           this.send({ type: 'optimise', id, params });
         }),
@@ -90,6 +92,7 @@ class EngineClient {
 
   cancel(id: number) {
     if (this.pending.has(id)) this.send({ type: 'cancel', id });
+    else this.cancelledEarly.add(id);
   }
 }
 
