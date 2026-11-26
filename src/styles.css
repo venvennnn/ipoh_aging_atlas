@@ -525,13 +525,6 @@ table.data thead th {
   margin: 0;
   min-width: 0;
 }
-.chapter-visual svg {
-  display: block;
-  width: 100%;
-  max-width: 480px;
-  height: auto;
-  margin: 0 auto;
-}
 .chapter-visual img {
   display: block;
   width: 100%;
@@ -795,4 +788,48 @@ table.data thead th {
 .zoom-map .map-overlay {
   margin: 0;
   z-index: 3;
+}
+
+/* ------------------------------------------------------------ colour keys */
+
+.color-key {
+  margin-top: 12px;
+  max-width: 420px;
+}
+.ck-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.ck-bar {
+  height: 12px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.ck-ticks {
+  position: relative;
+  height: 18px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.ck-ticks span {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+.ck-extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.ck-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
