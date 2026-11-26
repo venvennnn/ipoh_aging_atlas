@@ -497,8 +497,7 @@ table.data thead th {
   right: 3%;
   top: 24px;
   height: 700px;
-  width: auto;
-  aspect-ratio: 740 / 800;
+  width: 647.5px; /* 700 × 740/800: an SVG has no intrinsic width for width:auto */
 }
 .hero-shade {
   position: absolute;
@@ -842,6 +841,7 @@ table.data thead th {
     right: -18%;
     top: 40px;
     height: 560px;
+    width: 518px;
     opacity: 0.85;
   }
   .chapter {
