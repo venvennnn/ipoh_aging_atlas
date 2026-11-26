@@ -1,5 +1,6 @@
 import { THRESHOLDS, checkFor, type Mode } from '../../engine/core';
-import { fmt, ramp } from '../../lib/format';
+import { fmt } from '../../lib/format';
+import { STATUS_COLORS } from '../../map/AtlasMap';
 import type { AtlasData, FacType } from '../../lib/types';
 import { ToggleGroup } from '../../components/ui';
 
@@ -10,27 +11,27 @@ export const TYPE_META: Record<FacType, { label: string; color: string }> = {
   bus: { label: 'Bus stop', color: '#44443F' },
 };
 
-const OR = ['#FBF3EC', '#FDE0CC', '#F8B48C', '#D9773F'];
-const NEW = ['#CDE2FB', '#86B6EF', '#1C5CAB', '#0D366B'];
-
-/** Hexagons by residents 65+ (orange); hexagons with newly reached residents switch to blue. */
-export function hexFills(D: AtlasData, hexNew: Float64Array | null): string[] {
-  return D.hex.map((h, j) => {
-    const nv = hexNew ? hexNew[j] : 0;
-    return nv > 0 ? ramp(NEW, Math.sqrt(nv / 200)) : ramp(OR, Math.sqrt(h.p65 / 320));
-  });
-}
+/** How existing facilities of a type are drawn on the map. */
+export const existingStyle = (type: FacType) =>
+  type === 'bus' ? { color: '#15181D', radius: 3, strokeWidth: 1 } : { color: '#15181D', radius: 6, strokeWidth: 2 };
 
 export function MapKeys({ recommended }: { recommended?: boolean }) {
   return (
     <div className="keys">
       <span>
-        <span className="swatch" style={{ background: '#F8B48C' }} />
-        Residents 65+
+        <span className="swatch" style={{ background: STATUS_COLORS.today, opacity: 0.6 }} />
+        Within reach today
       </span>
       <span>
-        <span className="swatch" style={{ background: '#1C5CAB' }} />
+        <span className="swatch" style={{ background: STATUS_COLORS.gain }} />
         Newly in reach
+      </span>
+      <span>
+        <span
+          className="swatch"
+          style={{ background: `repeating-linear-gradient(45deg, ${STATUS_COLORS.out} 0 3px, transparent 3px 6px)`, border: `1px solid ${STATUS_COLORS.out}` }}
+        />
+        Still out of reach
       </span>
       <span>
         <span className="swatch dot" style={{ width: 10, height: 10, background: '#15181D' }} />
@@ -85,13 +86,6 @@ export function ReachControls({
       </div>
     </>
   );
-}
-
-/** Existing facilities inside the frame (points outside it still count in the engine). */
-export function existingPoints(D: AtlasData, type: FacType) {
-  return D.fac[type]
-    .filter((p) => p.x >= 0 && p.x <= 740 && p.y >= 0 && p.y <= 800)
-    .map((p) => (type === 'bus' ? { x: p.x, y: p.y, r: 2.4, sw: 0.6, n: p.n } : { x: p.x, y: p.y, r: 6, sw: 2, n: p.n }));
 }
 
 export function modelCheck(D: AtlasData, type: FacType, mode: Mode, ti: number) {

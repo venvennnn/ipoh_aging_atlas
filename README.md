@@ -19,6 +19,16 @@ Every number comes from `public/data/` and `public/img/`. These were produced fr
 
 The data and image files are served with a one-year cache. If one changes, bump `DATA_VERSION` in `src/lib/data.ts`; image URLs are not versioned, so give a changed image a new file name.
 
+## Maps
+
+Interactive maps are zoomable street maps built with [MapLibre GL](https://maplibre.org/) on the free [OpenFreeMap](https://openfreemap.org/) "Positron" basemap (OpenStreetMap data, no API key; credits are shown on each map). Overlays come from the data files:
+
+- Population and access status are drawn as the pipeline's real 100 m population cells (19,954), not hexagons. In the simulators each cell is shown as within reach today (blue), newly in reach (green) or still out of reach (orange hatching).
+- Travel-time and index rasters are the notebook PNGs, placed exactly on `bounds`.
+- DUN polygons and the city boundary are converted from the SVG paths in the data file.
+
+Visitors' browsers must be able to reach `tiles.openfreemap.org`. The overview maps need Ctrl/⌘ + scroll (two fingers on touch) to zoom, so the page still scrolls. The simulator maps zoom with a plain scroll. In the Place a facility map, focus the map and press Enter to add a site at the centre.
+
 ## Simulation engine
 
 `src/engine/core.ts` holds the engine; it runs in a Web Worker (`src/engine/worker.ts`). Travel time is straight-line distance from each 100 m cell to the nearest facility, converted with the calibration stored in the data:

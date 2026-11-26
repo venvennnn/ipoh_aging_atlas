@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import IndexMap from '../components/IndexMap';
-import RasterMap from '../components/RasterMap';
+import AtlasMap, { type CellProps } from '../map/AtlasMap';
+import { rampExpr } from '../map/expr';
 import { BarRow, HoverCard, LoadError, RampLegend, ToggleGroup } from '../components/ui';
-import { bestInk, fmt, inFrame, ramp, signed } from '../lib/format';
-import type { AtlasData, Dun, Facility, Hex, Stats } from '../lib/types';
+import { bestInk, fmt, ramp, signed } from '../lib/format';
+import type { AtlasData, Dun, Stats } from '../lib/types';
 import { useAtlas, useStats } from '../lib/useData';
 import { AccessCurves, IncomeDumbbell } from './overview/charts';
 import { robustRule } from './overview/derive';
@@ -158,25 +159,20 @@ type PeopleKey = 'p65' | 'pop' | 'pct';
 function People({ S, D }: { S: Stats; D: AtlasData | null }) {
   const P = S.population;
   const [layer, setLayer] = useState<PeopleKey>('p65');
-  const [hover, setHover] = useState<Hex | null>(null);
-  const max = useMemo(
-    () => (D ? { p65: Math.max(...D.hex.map((h) => h.p65)), pop: Math.max(...D.hex.map((h) => h.pop)), pct: Math.max(...D.hex.map((h) => h.pct)) } : null),
-    [D],
-  );
+  const [hover, setHover] = useState<CellProps | null>(null);
+  // Colour scales run from 0 to the largest 100 m cell in the data.
+  const max = useMemo(() => (D ? { p65: Math.max(...D.cells.p65), pop: Math.max(...D.cells.pop) } : null), [D]);
   const PL = {
-    p65: { key: 'p65', max: 320, stops: ORANGES, unit: 'residents 65+ per hexagon', lo: '0', hi: '320' },
-    pop: { key: 'pop', max: 2600, stops: BLUES, unit: 'residents per hexagon', lo: '0', hi: '2,600' },
-    pct: { key: 'pct', max: 14, stops: ORANGES, unit: '% aged 65+ (Census 2020 shares)', lo: '8%', hi: '14%' },
+    p65: { stops: ORANGES, unit: 'residents 65+ per 100 m cell', lo: '0', hi: max ? max.p65.toFixed(1) : '' },
+    pop: { stops: BLUES, unit: 'residents per 100 m cell', lo: '0', hi: max ? fmt(max.pop) : '' },
+    pct: { stops: ORANGES, unit: '% aged 65+ (Census 2020 shares)', lo: '8%', hi: '14%+' },
   } as const;
   const pl = PL[layer];
-  const fills = useMemo(
-    () =>
-      D?.hex.map((h) => {
-        const v = h[pl.key];
-        return ramp(pl.stops as unknown as string[], pl.key === 'pct' ? (v - 8) / 6 : Math.sqrt(v / pl.max));
-      }) ?? [],
-    [D, pl],
-  );
+  const color = useMemo(() => {
+    if (!max) return null;
+    if (layer === 'pct') return rampExpr(ORANGES, ['get', 'pct'], 8, 14);
+    return rampExpr(pl.stops as unknown as string[], ['sqrt', ['get', layer]], 0, Math.sqrt(max[layer]));
+  }, [layer, max, pl]);
   const census = [...P.census_2020].sort((a, b) => b.pct65 - a.pct65);
   const censusTotal = P.census_2020.reduce((a, c) => a + c.pop, 0);
   const mukim = P.census_2020.find((c) => c.area === 'Mukim Hulu Kinta');
@@ -202,22 +198,23 @@ function People({ S, D }: { S: Stats; D: AtlasData | null }) {
             onChange={setLayer}
           />
           <div className="map-wrap" style={{ marginTop: 12 }}>
-            <svg viewBox="0 0 740 800" role="img" aria-label={`Hexagon map of Ipoh: ${pl.unit}`} className="map-svg" onMouseLeave={() => setHover(null)}>
-              {D?.hex.map((h, i) => (
-                <path key={h.id} d={h.d} fill={fills[i]} stroke="#FFFFFF" strokeWidth={0.6} onPointerEnter={() => setHover(h)} />
-              ))}
-              {D && <path d={D.boundary} fill="none" stroke="#15181D" strokeWidth={1.6} pointerEvents="none" />}
-            </svg>
-            <HoverCard
-              title={hover ? `${hover.dun ? `${hover.dun} · ` : ''}${hover.area}` : 'Hover a hexagon'}
-              body={
-                hover
-                  ? `${fmt(hover.pop)} residents\n${fmt(hover.p65)} aged 65+ (${hover.pct.toFixed(1)}%)`
-                  : `${fmt(P.total_2026)} residents · ${fmt(P.aged65_2026)} aged 65+\n${fmt(P.hexagons)} hexagons of 400 m`
-              }
-            />
+            <AtlasMap
+              D={D}
+              label={`Zoomable street map of Ipoh shaded by ${pl.unit}`}
+              cellColor={color}
+              onCellHover={setHover}
+            >
+              <HoverCard
+                title={hover ? `${hover.dun ? `${hover.dun} · ` : ''}${hover.area}` : 'Hover the map'}
+                body={
+                  hover
+                    ? `This 100 m cell: ${hover.p65.toFixed(1)} aged 65+ of ${hover.pop.toFixed(0)} residents\nShare 65+ in this area: ${hover.pct.toFixed(1)}%`
+                    : `${fmt(P.total_2026)} residents · ${fmt(P.aged65_2026)} aged 65+\nScroll with Ctrl/⌘ or use + − to zoom`
+                }
+              />
+            </AtlasMap>
           </div>
-          <RampLegend lo={pl.lo} hi={pl.hi + (max && max[layer] > pl.max ? '+' : '')} stops={pl.stops as unknown as string[]} unit={pl.unit} />
+          <RampLegend lo={pl.lo} hi={pl.hi} stops={pl.stops as unknown as string[]} unit={pl.unit} />
         </div>
         <div className="col side-col" style={{ flex: '1 1 360px' }}>
           <div className="card pad-22">
@@ -273,13 +270,14 @@ function rasterHi(meta: { max: number; unit: string }) {
 
 function Health({ S, D }: { S: Stats; D: AtlasData | null }) {
   const [k, setK] = useState<HealthKey>('walk_clinic');
-  const [hover, setHover] = useState<Facility | null>(null);
+  const [hover, setHover] = useState<string | null>(null);
   const cur = HEALTH_LAYERS.find((l) => l.key === k)!;
   const meta = S.rasters.layers[k];
   const isCap = meta.unit !== 'min';
   const ptsType = cur.pts;
-  const pts = D ? D.fac[ptsType].filter(inFrame) : [];
   const ptFill = ptsType === 'clinic' ? '#1C5CAB' : '#15181D';
+  const points = useMemo(() => (D ? { list: D.fac[ptsType], color: ptFill, radius: 7, strokeWidth: 2.5 } : null), [D, ptsType, ptFill]);
+  const raster = useMemo(() => ({ url: `/img/${k}.png`, opacity: 0.85 }), [k]);
   const beds = S.health.beds_perak_2024;
   const walkMps = Math.round(((D?.calib.walk_speed_km_per_min ?? 0) * 1000) / 60 * 10) / 10;
 
@@ -302,29 +300,15 @@ function Health({ S, D }: { S: Stats; D: AtlasData | null }) {
             }}
           />
           <div className="map-wrap" style={{ marginTop: 12 }}>
-            <RasterMap
-              src={`/img/${k}.png`}
-              label={`Map of ${cur.label} across Ipoh${isCap ? '' : ', travel time in minutes'}, with ${ptsType === 'clinic' ? 'public clinics' : 'hospitals'} marked`}
-              boundary={D?.boundary ?? ''}
+            <AtlasMap
+              D={D}
+              label={`Zoomable street map of ${cur.label} across Ipoh${isCap ? '' : ', travel time in minutes'}, with ${ptsType === 'clinic' ? 'public clinics' : 'hospitals'} marked`}
+              raster={raster}
+              points={points}
+              onPointHover={setHover}
             >
-              {pts.map((p) => (
-                <circle
-                  key={`${p.n}-${p.x}`}
-                  cx={p.x}
-                  cy={p.y}
-                  r={8}
-                  fill={ptFill}
-                  stroke="#FFFFFF"
-                  strokeWidth={2.5}
-                  onPointerEnter={() => setHover(p)}
-                  style={{ cursor: 'default' }}
-                >
-                  <title>{p.n || 'Facility'}</title>
-                </circle>
-              ))}
-            </RasterMap>
             <HoverCard
-              title={hover ? hover.n || 'Facility' : cur.label}
+              title={hover ?? cur.label}
               body={
                 hover
                   ? ptsType === 'clinic'
@@ -335,6 +319,7 @@ function Health({ S, D }: { S: Stats; D: AtlasData | null }) {
                     : 'Hover a point for its name. Darker red = longer trip.'
               }
             />
+            </AtlasMap>
           </div>
           <RampLegend
             lo={isCap ? `${meta.min}` : `${meta.min} min`}
@@ -375,20 +360,20 @@ function Health({ S, D }: { S: Stats; D: AtlasData | null }) {
 // ------------------------------------------------------------------ money
 
 function Money({ S, D }: { S: Stats; D: AtlasData | null }) {
-  const [hover, setHover] = useState<Dun | null>(null);
+  const [hoverName, setHoverName] = useState<string | null>(null);
   const { lo, hi, n } = incomeExtremes(S);
   const p65 = Object.fromEntries(S.index.dun.map((d) => [d.dun, d.aged65]));
-  const shapes = useMemo(
-    () =>
-      D?.dun.map((d) => {
-        const t = (d.income - lo.median_2024) / (hi.median_2024 - lo.median_2024);
-        const fill = ramp(BLUES, 0.1 + t * 0.9);
-        // Label nudges from the design, to keep two labels off DUN edges.
-        const off = ({ Menglembu: [-30, -8], 'Tebing Tinggi': [12, 14] } as Record<string, number[]>)[d.name] ?? [0, 0];
-        return { ...d, fill, ink: bestInk(fill), lx: d.x + off[0], ly: d.y + off[1] };
-      }) ?? [],
-    [D, lo, hi],
-  );
+  const { fill, ink } = useMemo(() => {
+    const fill: Record<string, string> = {};
+    const ink: Record<string, string> = {};
+    D?.dun.forEach((d) => {
+      const t = (d.income - lo.median_2024) / (hi.median_2024 - lo.median_2024);
+      fill[d.name] = ramp(BLUES, 0.1 + t * 0.9);
+      ink[d.name] = bestInk(fill[d.name]);
+    });
+    return D ? { fill, ink } : { fill: null, ink: null };
+  }, [D, lo, hi]);
+  const hover: Dun | null = (hoverName && D?.dun.find((d) => d.name === hoverName)) || null;
   const poverty = S.money.poverty_2024;
   const rwi = S.money.rwi_check;
   return (
@@ -401,22 +386,13 @@ function Money({ S, D }: { S: Stats; D: AtlasData | null }) {
       <div className="row" style={{ gap: 24 }}>
         <div className="card map-card">
           <div className="map-wrap">
-            <svg viewBox="0 0 740 800" role="img" aria-label="Map of median household income by constituency in Ipoh" className="map-svg" onMouseLeave={() => setHover(null)}>
-              {shapes.map((d) => (
-                <path key={d.code} d={d.d} fill={d.fill} stroke="#FFFFFF" strokeWidth={2} onPointerEnter={() => setHover(d)} />
-              ))}
-              {D && <path d={D.boundary} fill="none" stroke="#15181D" strokeWidth={1.6} pointerEvents="none" />}
-              {shapes.map((d) => (
-                <g key={d.code} pointerEvents="none">
-                  <text x={d.lx} y={d.ly} textAnchor="middle" fontSize={12} fontWeight={700} fill={d.ink}>
-                    {d.name}
-                  </text>
-                  <text x={d.lx} y={d.ly + 14} textAnchor="middle" fontSize={11} fill={d.ink}>
-                    RM{fmt(d.income)}
-                  </text>
-                </g>
-              ))}
-            </svg>
+            <AtlasMap
+              D={D}
+              label="Zoomable street map of median household income by constituency in Ipoh"
+              dunFill={fill}
+              dunLabels={ink}
+              onDunHover={setHoverName}
+            >
             <HoverCard
               title={hover ? `${hover.code} ${hover.name}` : 'Hover a constituency'}
               body={
@@ -425,6 +401,7 @@ function Money({ S, D }: { S: Stats; D: AtlasData | null }) {
                   : `${n} DUNs · DOSM HIES 2024`
               }
             />
+            </AtlasMap>
           </div>
           <RampLegend lo={`RM${fmt(lo.median_2024)}`} hi={`RM${fmt(hi.median_2024)}`} stops={BLUES} unit="median per month, 2024" />
         </div>
@@ -467,7 +444,12 @@ function Money({ S, D }: { S: Stats; D: AtlasData | null }) {
 function Care({ S, D }: { S: Stats; D: AtlasData | null }) {
   const [k, setK] = useState<'care' | 'bus'>('care');
   const meta = S.rasters.layers[k === 'care' ? 'walk_care' : 'walk_bus'];
-  const pts = D ? D.fac[k].filter(inFrame) : [];
+  const [hover, setHover] = useState<string | null>(null);
+  const points = useMemo(
+    () => (D ? (k === 'care' ? { list: D.fac.care, color: '#6E2408', radius: 7, strokeWidth: 2.5 } : { list: D.fac.bus, color: '#15181D', radius: 3, strokeWidth: 1 }) : null),
+    [D, k],
+  );
+  const raster = useMemo(() => ({ url: `/img/${k === 'care' ? 'walk_care' : 'walk_bus'}.png`, opacity: 0.85 }), [k]);
   const A = S.access;
   const bus: [string, number][] = [
     ['Within 500 m of a stop', A.pct65_within_500m],
@@ -498,25 +480,22 @@ function Care({ S, D }: { S: Stats; D: AtlasData | null }) {
             onChange={setK}
           />
           <div className="map-wrap" style={{ marginTop: 12 }}>
-            <RasterMap
-              src={`/img/${k === 'care' ? 'walk_care' : 'walk_bus'}.png`}
+            <AtlasMap
+              D={D}
               label={
                 k === 'care'
-                  ? `Walking time to the nearest care home, with the ${S.care.care_homes_osm} care homes marked`
-                  : `Walking time to the nearest bus stop, with ${fmt(A.bus_stops)} stops marked`
+                  ? `Zoomable street map of walking time to the nearest care home, with the ${S.care.care_homes_osm} care homes marked`
+                  : `Zoomable street map of walking time to the nearest bus stop, with ${fmt(A.bus_stops)} stops marked`
               }
-              boundary={D?.boundary ?? ''}
+              raster={raster}
+              points={points}
+              onPointHover={setHover}
             >
-              {pts.map((p, i) =>
-                k === 'care' ? (
-                  <circle key={i} cx={p.x} cy={p.y} r={7} fill="#6E2408" stroke="#FFFFFF" strokeWidth={2.5}>
-                    <title>{p.n || 'Care home'}</title>
-                  </circle>
-                ) : (
-                  <circle key={i} cx={p.x} cy={p.y} r={2.6} fill="#15181D" stroke="#FFFFFF" strokeWidth={0.8} />
-                ),
-              )}
-            </RasterMap>
+              <HoverCard
+                title={hover ?? (k === 'care' ? 'Walk · care home' : 'Walk · bus stop')}
+                body={hover ? (k === 'care' ? 'Care home (OpenStreetMap)' : 'Bus stop') : 'Hover a point for its name. Darker red = longer walk.'}
+              />
+            </AtlasMap>
           </div>
           <RampLegend
             lo={`${meta.min} min`}
