@@ -8,7 +8,7 @@ import type { AtlasData, Dun, Facility, Hex, Stats } from '../lib/types';
 import { useAtlas, useStats } from '../lib/useData';
 import { AccessCurves, IncomeDumbbell } from './overview/charts';
 import { robustRule } from './overview/derive';
-import Hero from './overview/Hero';
+import Chapters from './overview/Chapters';
 
 const BLUES = ['#EEF4FC', '#CDE2FB', '#86B6EF', '#1C5CAB', '#0D366B'];
 const ORANGES = ['#FFF4EC', '#FDE0CC', '#F8B48C', '#B9461A', '#6E2408'];
@@ -39,7 +39,7 @@ export default function Overview() {
 
   return (
     <>
-      {S ? <Hero stats={S} atlas={atlas.data} /> : <section className="hero" aria-label="Introduction" />}
+      {S && <Chapters stats={S} atlas={atlas.data} />}
       <main className="wrap">
         <nav aria-label="On this page" className="toc">
           {TOC.map((t) => (
@@ -216,7 +216,6 @@ function People({ S, D }: { S: Stats; D: AtlasData | null }) {
                   : `${fmt(P.total_2026)} residents · ${fmt(P.aged65_2026)} aged 65+\n${fmt(P.hexagons)} hexagons of 400 m`
               }
             />
-            {!D && <div className="map-overlay">Loading map…</div>}
           </div>
           <RampLegend lo={pl.lo} hi={pl.hi + (max && max[layer] > pl.max ? '+' : '')} stops={pl.stops as unknown as string[]} unit={pl.unit} />
         </div>
@@ -426,7 +425,6 @@ function Money({ S, D }: { S: Stats; D: AtlasData | null }) {
                   : `${n} DUNs · DOSM HIES 2024`
               }
             />
-            {!D && <div className="map-overlay">Loading map…</div>}
           </div>
           <RampLegend lo={`RM${fmt(lo.median_2024)}`} hi={`RM${fmt(hi.median_2024)}`} stops={BLUES} unit="median per month, 2024" />
         </div>

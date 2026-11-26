@@ -28,7 +28,7 @@ export default function App() {
       </a>
       <Header narrow={pathname === '/'} />
       <div id="content">
-        <Suspense fallback={<p className="page small">Loading…</p>}>
+        <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<Overview />} />
             <Route path="/place" element={<PlaceFacility />} />
