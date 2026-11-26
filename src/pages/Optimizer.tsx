@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { THRESHOLDS, modeFor, unitFor, type Goal, type OptimiseResult, type Pick } from '../engine/core';
+import { CELL_NEW, CELL_TODAY, THRESHOLDS, modeFor, unitFor, type Goal, type OptimiseResult, type Pick } from '../engine/core';
 import { CancelledError, getEngine } from '../engine/client';
 import { LoadError } from '../components/ui';
 import { fmt } from '../lib/format';
 import { FAC_TYPES, type FacType } from '../lib/types';
 import { useAtlas } from '../lib/useData';
-import { KnownLimits, MapKeys, ReachControls, TYPE_META, existingPoints, hexFills, modelCheck } from './sim/shared';
+import { KnownLimits, MapKeys, ReachControls, TYPE_META, existingStyle, modelCheck } from './sim/shared';
+import AtlasMap, { type CellProps } from '../map/AtlasMap';
+import { HoverCard } from '../components/ui';
 
 const GOALS: { key: Goal; label: string; desc: string }[] = [
   { key: 'cover', label: 'Reach the most people', desc: 'Most residents 65+ newly within the travel time.' },
@@ -107,8 +109,25 @@ export default function Optimizer() {
   const dec = rMode === 'bus' ? 0 : 1;
   const picks = busy ? live : (r?.picks ?? []);
 
-  const fills = useMemo(() => (D ? hexFills(D, busy ? null : (r?.hexNew ?? null)) : []), [D, r, busy]);
-  const existing = useMemo(() => (D ? existingPoints(D, busy ? s.type : rs.type) : []), [D, s.type, rs.type, busy]);
+  const shownType = busy ? s.type : rs.type;
+  const points = useMemo(() => (D ? { list: D.fac[shownType], ...existingStyle(shownType) } : null), [D, shownType]);
+  const pins = useMemo(
+    () =>
+      D
+        ? picks.map((p, k) => ({ lon: D.hex[p.hex].lon, lat: D.hex[p.hex].lat, n: k + 1, color: '#B9461A', label: `Recommended site ${k + 1}` }))
+        : [],
+    [D, picks],
+  );
+  const [hover, setHover] = useState<CellProps | null>(null);
+  const cellState = busy ? null : (r?.cellState ?? null);
+  const hoverStatus =
+    hover && cellState
+      ? cellState[hover.id] === CELL_TODAY
+        ? 'Within reach today'
+        : cellState[hover.id] === CELL_NEW
+          ? 'Newly in reach with these sites'
+          : 'Still out of reach'
+      : '';
 
   const vals = r && !busy ? [r.baseCov, ...r.picks.map((p) => p.cov)] : [];
   const bw = vals.length ? 276 / vals.length : 0;
@@ -279,32 +298,32 @@ export default function Optimizer() {
                   : tname}
               </p>
               <div className="map-wrap">
-                <svg viewBox="0 0 740 800" role="img" aria-label="Map of Ipoh with the recommended sites numbered" className="map-svg">
-                  {D?.hex.map((h, j) => <path key={h.id} d={h.d} fill={fills[j]} stroke="#FFFFFF" strokeWidth={0.6} />)}
-                  {D && <path d={D.boundary} fill="none" stroke="#15181D" strokeWidth={1.6} />}
-                  {existing.map((p, i) => (
-                    <circle key={i} cx={p.x} cy={p.y} r={p.r} fill="#15181D" stroke="#FFFFFF" strokeWidth={p.sw} />
-                  ))}
-                  {D &&
-                    picks.map((p, k) => {
-                      const h = D.hex[p.hex];
-                      return (
-                        <g key={k}>
-                          <circle cx={h.x} cy={h.y} r={14} fill="#B9461A" stroke="#FFFFFF" strokeWidth={3} />
-                          <text x={h.x} y={h.y + 4.5} textAnchor="middle" fontSize={13} fontWeight={800} fill="#FFFFFF">
-                            {k + 1}
-                          </text>
-                        </g>
-                      );
-                    })}
-                </svg>
-                {(!D || busy) && !atlas.error && (
-                  <div className="map-overlay" role="status">
-                    {!D
-                      ? 'Loading population cells…'
-                      : `Testing ${s.dun === 'all' ? fmt(D.hex.length) : 'all'} candidate sites · site ${step + 1} of ${s.n}`}
-                  </div>
-                )}
+                <AtlasMap
+                  D={D}
+                  cooperative={false}
+                  label="Zoomable street map of Ipoh with the recommended sites numbered"
+                  cellState={cellState}
+                  points={points}
+                  pins={pins}
+                  onCellHover={setHover}
+                >
+                  <HoverCard
+                    title={
+                      busy && D
+                        ? `Testing ${s.dun === 'all' ? fmt(D.hex.length) : 'all'} candidate sites · site ${step + 1} of ${s.n}`
+                        : hover
+                          ? hover.dun || hover.area
+                          : 'Hover the map'
+                    }
+                    body={
+                      busy
+                        ? 'Sites appear on the map as they are found.'
+                        : hover
+                          ? `${hoverStatus}\nThis 100 m cell: ${hover.p65.toFixed(1)} residents 65+ of ${hover.pop.toFixed(0)}`
+                          : 'Drag to pan, scroll or + − to zoom.'
+                    }
+                  />
+                </AtlasMap>
               </div>
               <div style={{ marginTop: 8 }}>
                 <MapKeys recommended />

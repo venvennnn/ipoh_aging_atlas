@@ -163,11 +163,18 @@ export interface PlaceResult {
   perSite: number[];
   /** Residents 65+ newly within reach, per hexagon index. */
   hexNew: Float64Array;
+  /** Per cell: CELL_TODAY, CELL_NEW or CELL_OUT. */
+  cellState: Uint8Array;
   /** [DUN name, residents 65+ newly in reach], largest first. Cells outside every DUN are grouped. */
   gainsByDun: [string, number][];
 }
 
 export const OUTSIDE_DUNS = 'Outside DUNs';
+
+/** Cell status codes used by the maps. */
+export const CELL_TODAY = 0; // within the threshold with existing facilities
+export const CELL_NEW = 1; // newly within the threshold with the plan
+export const CELL_OUT = 2; // still outside the threshold
 
 export function evaluatePlacement(E: Engine, p: PlaceParams): PlaceResult {
   const metric = metricFor(E.input.calib, p.type, p.mode);
@@ -177,6 +184,7 @@ export function evaluatePlacement(E: Engine, p: PlaceParams): PlaceResult {
   const PY = p.sites.map((s) => s.lat * KM_PER_DEG_LAT);
   const hexNew = new Float64Array(E.input.hex.length);
   const perSite = p.sites.map(() => 0);
+  const cellState = new Uint8Array(n);
   let baseIn = 0;
   let afterIn = 0;
   let sumB = 0;
@@ -199,6 +207,7 @@ export function evaluatePlacement(E: Engine, p: PlaceParams): PlaceResult {
     sumB += W[i] * mb;
     sumA += W[i] * ma;
     if (mb <= p.thr) baseIn += W[i];
+    cellState[i] = mb <= p.thr ? CELL_TODAY : ma <= p.thr ? CELL_NEW : CELL_OUT;
     if (ma <= p.thr) {
       afterIn += W[i];
       if (mb > p.thr) {
@@ -224,6 +233,7 @@ export function evaluatePlacement(E: Engine, p: PlaceParams): PlaceResult {
     afterAvg: sumA / tot,
     perSite,
     hexNew,
+    cellState,
     gainsByDun,
   };
 }
@@ -260,6 +270,7 @@ export interface OptimiseResult {
   baseAvg: number;
   finalAvg: number;
   hexNew: Float64Array;
+  cellState: Uint8Array;
   candidates: number;
 }
 
@@ -411,7 +422,12 @@ export function* optimise(E: Engine, p: OptimiseParams): Generator<Pick, Optimis
   }
 
   const hexNew = new Float64Array(hex.length);
-  for (let q = 0; q < n; q++) if (curM[q] <= thr && metric(base[q]) > thr) hexNew[HX[q]] += W[q];
+  const cellState = new Uint8Array(n);
+  for (let q = 0; q < n; q++) {
+    const before = metric(base[q]) <= thr;
+    cellState[q] = before ? CELL_TODAY : curM[q] <= thr ? CELL_NEW : CELL_OUT;
+    if (!before && curM[q] <= thr) hexNew[HX[q]] += W[q];
+  }
   const fin = covered();
   return {
     picks,
@@ -421,6 +437,7 @@ export function* optimise(E: Engine, p: OptimiseParams): Generator<Pick, Optimis
     baseAvg,
     finalAvg: avg(),
     hexNew,
+    cellState,
     candidates: cand.length,
   };
 }

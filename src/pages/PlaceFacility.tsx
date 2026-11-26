@@ -1,15 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
-import { THRESHOLDS, modeFor, unitFor, type PlaceResult } from '../engine/core';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CELL_NEW, CELL_TODAY, THRESHOLDS, modeFor, unitFor, type PlaceResult } from '../engine/core';
 import { getEngine } from '../engine/client';
 import { HoverCard, LoadError } from '../components/ui';
-import { fmt, svgToLonLat } from '../lib/format';
+import { fmt } from '../lib/format';
+import AtlasMap, { type CellProps } from '../map/AtlasMap';
 import { FAC_TYPES, type FacType } from '../lib/types';
 import { useAtlas } from '../lib/useData';
-import { KnownLimits, MapKeys, ReachControls, TYPE_META, existingPoints, hexFills, modelCheck } from './sim/shared';
+import { KnownLimits, MapKeys, ReachControls, TYPE_META, existingStyle, modelCheck } from './sim/shared';
 
 interface Site {
-  x: number;
-  y: number;
   lon: number;
   lat: number;
 }
@@ -21,10 +20,9 @@ export default function PlaceFacility() {
   const [walkDrive, setWalkDrive] = useState<'walk' | 'drive'>('walk');
   const [thrIdx, setThrIdx] = useState(1);
   const [placed, setPlaced] = useState<Site[]>([]);
-  const [hover, setHover] = useState<number | null>(null);
+  const [hover, setHover] = useState<CellProps | null>(null);
   const [result, setResult] = useState<PlaceResult | null>(null);
   const [engineError, setEngineError] = useState<string | null>(null);
-  const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
   const reqRef = useRef(0);
 
   const mode = modeFor(type, walkDrive);
@@ -47,31 +45,22 @@ export default function PlaceFacility() {
       );
   }, [D, type, mode, thr, placed]);
 
-  const fills = useMemo(() => (D ? hexFills(D, result?.hexNew ?? null) : []), [D, result]);
-  const existing = useMemo(() => (D ? existingPoints(D, type) : []), [D, type]);
-
-  const addAt = (x: number, y: number) => setPlaced((p) => [...p, { x, y, ...svgToLonLat(x, y) }]);
-  const onMapClick = (e: MouseEvent<SVGSVGElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    addAt(((e.clientX - r.left) / r.width) * 740, ((e.clientY - r.top) / r.height) * 800);
-  };
-  // Keyboard placement: arrows move a cross-hair, Enter or Space places a site there.
-  const onMapKey = (e: KeyboardEvent<HTMLDivElement>) => {
-    const step = e.shiftKey ? 40 : 10;
-    const c = cursor ?? { x: 370, y: 400 };
-    const mv: Record<string, [number, number]> = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
-    if (mv[e.key]) {
-      e.preventDefault();
-      setCursor({ x: Math.max(0, Math.min(740, c.x + mv[e.key][0])), y: Math.max(0, Math.min(800, c.y + mv[e.key][1])) });
-    } else if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      addAt(c.x, c.y);
-      setCursor(c);
-    }
-  };
+  const points = useMemo(() => (D ? { list: D.fac[type], ...existingStyle(type) } : null), [D, type]);
+  const pins = useMemo(
+    () => placed.map((p, i) => ({ ...p, n: i + 1, color: meta.color, label: `Your ${meta.label.toLowerCase()} ${i + 1}` })),
+    [placed, meta],
+  );
+  const addAt = useCallback((lon: number, lat: number) => setPlaced((p) => [...p, { lon, lat }]), []);
 
   const tot = result?.tot ?? 0;
-  const hv = D && hover != null ? D.hex[hover] : null;
+  const hoverStatus =
+    hover && result
+      ? result.cellState[hover.id] === CELL_TODAY
+        ? 'Within reach today'
+        : result.cellState[hover.id] === CELL_NEW
+          ? 'Newly in reach with your plan'
+          : 'Still out of reach'
+      : '';
   const chk = D ? modelCheck(D, type, mode, ti) : { model: null, routed: null };
   const gains = (result?.gainsByDun ?? []).slice(0, 6);
   const gmax = gains.length ? gains[0][1] : 1;
@@ -152,7 +141,7 @@ export default function PlaceFacility() {
             </h2>
             {placed.length === 0 && <p className="small" style={{ margin: 0 }}>None yet. Click the map.</p>}
             {placed.map((p, i) => (
-              <div key={`${p.x}-${p.y}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #F0EEE8', fontSize: 13 }}>
+              <div key={`${p.lon}-${p.lat}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #F0EEE8', fontSize: 13 }}>
                 <span
                   aria-hidden="true"
                   style={{
@@ -198,56 +187,27 @@ export default function PlaceFacility() {
             </p>
             <MapKeys />
           </div>
-          <div
-            className="map-wrap"
-            tabIndex={0}
-            role="group"
-            aria-label={`Map. Use the arrow keys to move the cross-hair and Enter to add a ${meta.label.toLowerCase()} there.`}
-            onKeyDown={onMapKey}
-            onBlur={() => setCursor(null)}
-          >
-            <svg
-              viewBox="0 0 740 800"
-              role="img"
-              aria-label={`Map of Ipoh. Click anywhere to add a ${meta.label.toLowerCase()}.`}
-              className="map-svg"
-              style={{ cursor: 'crosshair' }}
-              onClick={onMapClick}
-              onMouseLeave={() => setHover(null)}
+          <div className="map-wrap">
+            <AtlasMap
+              D={D}
+              cooperative={false}
+              label={`Zoomable street map of Ipoh. Click to add a ${meta.label.toLowerCase()}; with the map focused, press Enter to add one at the centre.`}
+              pickHint={`Arrow keys move the map, plus and minus zoom, Enter adds a ${meta.label.toLowerCase()} at the centre cross-hair.`}
+              cellState={result?.cellState ?? null}
+              points={points}
+              pins={pins}
+              onCellHover={setHover}
+              onPick={addAt}
             >
-              <rect x={0} y={0} width={740} height={800} fill="#FFFFFF" />
-              {D?.hex.map((h, j) => (
-                <path key={h.id} d={h.d} fill={fills[j]} stroke="#FFFFFF" strokeWidth={0.6} onPointerEnter={() => setHover(j)} />
-              ))}
-              {D && <path d={D.boundary} fill="none" stroke="#15181D" strokeWidth={1.6} pointerEvents="none" />}
-              {existing.map((p, i) => (
-                <circle key={i} cx={p.x} cy={p.y} r={p.r} fill="#15181D" stroke="#FFFFFF" strokeWidth={p.sw} pointerEvents="none" />
-              ))}
-              {placed.map((p, i) => (
-                <g key={i} pointerEvents="none">
-                  <circle cx={p.x} cy={p.y} r={13} fill={meta.color} stroke="#FFFFFF" strokeWidth={3} />
-                  <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize={12} fontWeight={800} fill="#FFFFFF">
-                    {i + 1}
-                  </text>
-                </g>
-              ))}
-              {cursor && (
-                <g pointerEvents="none" stroke="#15181D" strokeWidth={2}>
-                  <circle cx={cursor.x} cy={cursor.y} r={10} fill="none" />
-                  <line x1={cursor.x - 16} x2={cursor.x + 16} y1={cursor.y} y2={cursor.y} />
-                  <line x1={cursor.x} x2={cursor.x} y1={cursor.y - 16} y2={cursor.y + 16} />
-                </g>
-              )}
-            </svg>
-            <HoverCard
-              title={hv ? hv.dun || hv.area : `Click anywhere to add a ${meta.label.toLowerCase()}`}
-              body={
-                hv
-                  ? `${fmt(hv.p65)} residents 65+ · ${fmt(hv.pop)} people${result && result.hexNew[hover!] > 0 ? `\n+${fmt(result.hexNew[hover!])} newly in reach` : ''}`
-                  : 'Click a placed site’s × in the list to remove it.'
-              }
-            />
-            {!D && !atlas.error && <div className="map-overlay">Loading population cells…</div>}
+              <HoverCard
+                title={hover ? hover.dun || hover.area : `Click anywhere to add a ${meta.label.toLowerCase()}`}
+                body={
+                  hover
+                    ? `${hoverStatus}\nThis 100 m cell: ${hover.p65.toFixed(1)} residents 65+ of ${hover.pop.toFixed(0)}`
+                    : 'Drag to pan, scroll or + − to zoom. Remove a site with × in the list.'
+                }
+              />
+            </AtlasMap>
           </div>
         </section>
 
